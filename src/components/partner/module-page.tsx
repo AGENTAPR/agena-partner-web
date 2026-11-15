@@ -17,7 +17,7 @@ export function ModulePage({ titleKey, descriptionKey }: ModulePageProps) {
   const navigate = useNavigate();
 
   return (
-    <Box className="flex flex-col gap-6 p-6">
+    <Box className="flex flex-col gap-6">
       <Box>
         <Typography variant="h4" component="h1" className="font-bold">
           {t(titleKey)}
@@ -53,7 +53,7 @@ export function DetailPage({ titleKey }: { titleKey: string }) {
   const id = Object.values(params).find(Boolean) ?? "";
 
   return (
-    <Box className="flex flex-col gap-6 p-6">
+    <Box className="flex flex-col gap-6">
       <Typography variant="h4" component="h1" className="font-bold">
         {t(titleKey)}
       </Typography>

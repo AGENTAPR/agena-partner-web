@@ -22,7 +22,7 @@ export default function DashboardPage() {
   }).format(now);
 
   return (
-    <Box className="flex flex-col gap-6 p-4 sm:p-6">
+    <Box className="flex flex-col gap-6">
       <Box>
         <Typography variant="body2" color="text.secondary">
           {dateLine}

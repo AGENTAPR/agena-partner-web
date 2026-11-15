@@ -433,7 +433,7 @@ export function TodayExperience() {
   };
 
   return (
-    <Box className="flex flex-col gap-6 p-4 sm:p-6">
+    <Box className="flex flex-col gap-6">
       {isDev ? <ScenarioSwitcher /> : null}
 
       <div aria-live="polite" className="sr-only">
