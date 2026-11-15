@@ -15,6 +15,13 @@ export const leftMenuItems: MenuItem[] = [
     color: "text-primary",
   },
   {
+    id: "dashboard",
+    icon: "NiCells",
+    label: "menu-dashboard",
+    href: "/dashboard",
+    color: "text-primary",
+  },
+  {
     id: "prospects-customers",
     icon: "NiUsers",
     label: "menu-prospects-customers",

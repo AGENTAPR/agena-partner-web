@@ -729,5 +729,12 @@
   "today-agent-cert": "Ruang kerja sertifikasi",
   "today-agent-active": "Agen aktif",
   "today-agent-suspended": "Akun ditangguhkan",
-  "today-agent-offboard": "Ruang kerja offboarding"
+  "today-agent-offboard": "Ruang kerja offboarding",
+  "menu-dashboard": "Dasbor",
+  "dashboard-agent-name": "Nadia",
+  "dashboard-greeting-morning": "Selamat pagi, {{name}}",
+  "dashboard-greeting-afternoon": "Selamat siang, {{name}}",
+  "dashboard-greeting-evening": "Selamat sore, {{name}}",
+  "dashboard-greeting-night": "Selamat malam, {{name}}",
+  "dashboard-tagline": "Bantu lebih banyak keluarga merencanakan masa depan yang aman."
 }

@@ -34,6 +34,7 @@ const detailPage = (titleKey: string) => <DetailPage titleKey={titleKey} />;
  */
 const appRoutes: { path: string; element: React.ReactElement }[] = [
   { path: "/today", element: lazyPage("./pages/app/today/page.tsx") },
+  { path: "/dashboard", element: lazyPage("./pages/app/dashboard/page.tsx") },
   { path: "/sales", element: modulePage("menu-sales") },
   { path: "/portfolio", element: modulePage("menu-portfolio") },
   { path: "/development", element: <Navigate to="/development/overview" replace /> },

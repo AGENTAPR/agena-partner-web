@@ -729,5 +729,12 @@
   "today-agent-cert": "Certification workspace",
   "today-agent-active": "Active agent",
   "today-agent-suspended": "Suspended account",
-  "today-agent-offboard": "Offboarding workspace"
+  "today-agent-offboard": "Offboarding workspace",
+  "menu-dashboard": "Dashboard",
+  "dashboard-agent-name": "Nadia",
+  "dashboard-greeting-morning": "Good morning, {{name}}",
+  "dashboard-greeting-afternoon": "Good afternoon, {{name}}",
+  "dashboard-greeting-evening": "Good evening, {{name}}",
+  "dashboard-greeting-night": "Good night, {{name}}",
+  "dashboard-tagline": "Help more families plan a safe future."
 }
