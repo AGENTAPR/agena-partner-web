@@ -1,0 +1,72 @@
+/* --------------------------- */
+/* Theme Jade */
+/* --------------------------- */
+
+@layer base {
+  .theme-jade {
+    --primary: 172 65% 26%;
+    --primary-light: 172 65% 36%;
+    --primary-dark: 172 65% 16%;
+    --primary-contrast: 0 0% 100%;
+
+    --secondary: 210 52% 43%;
+    --secondary-light: 210 52% 53%;
+    --secondary-dark: 210 52% 33%;
+    --secondary-contrast: 0 0% 100%;
+
+    --accent-1: 279 24% 31%;
+    --accent-1-light: 279 24% 41%;
+    --accent-1-dark: 279 24% 21%;
+    --accent-1-contrast: 0 0% 100%;
+
+    --accent-2: 21 58% 61%;
+    --accent-2-light: 21 58% 71%;
+    --accent-2-dark: 21 58% 51%;
+    --accent-2-contrast: 270 9% 14%;
+
+    --accent-3: 159 18% 58%;
+    --accent-3-light: 159 18% 68%;
+    --accent-3-dark: 159 18% 48%;
+    --accent-3-contrast: 270 9% 14%;
+
+    --accent-4: 25 24% 62%;
+    --accent-4-light: 25 24% 72%;
+    --accent-4-dark: 25 24% 52%;
+    --accent-4-contrast: 270 9% 14%;
+
+    color-scheme: light;
+  }
+  .theme-jade.dark {
+    --primary: 172 65% 41%;
+    --primary-light: 172 65% 51%;
+    --primary-dark: 172 65% 31%;
+    --primary-contrast: 270 9% 10%;
+
+    --secondary: 210 52% 58%;
+    --secondary-light: 210 52% 68%;
+    --secondary-dark: 210 52% 48%;
+    --secondary-contrast: 270 9% 10%;
+
+    --accent-1: 279 24% 46%;
+    --accent-1-light: 279 24% 56%;
+    --accent-1-dark: 279 24% 36%;
+    --accent-1-contrast: 0 0% 100%;
+
+    --accent-2: 21 58% 75%;
+    --accent-2-light: 21 58% 85%;
+    --accent-2-dark: 21 58% 65%;
+    --accent-2-contrast: 270 9% 10%;
+
+    --accent-3: 159 18% 73%;
+    --accent-3-light: 159 18% 83%;
+    --accent-3-dark: 159 18% 63%;
+    --accent-3-contrast: 270 9% 10%;
+
+    --accent-4: 25 24% 75%;
+    --accent-4-light: 25 24% 85%;
+    --accent-4-dark: 25 24% 65%;
+    --accent-4-contrast: 270 9% 10%;
+
+    color-scheme: dark;
+  }
+}

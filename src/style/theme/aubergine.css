@@ -1,0 +1,72 @@
+/* --------------------------- */
+/* Theme Aubergine */
+/* --------------------------- */
+
+@layer base {
+  .theme-aubergine {
+    --primary: 279 24% 31%;
+    --primary-light: 279 24% 41%;
+    --primary-dark: 279 24% 21%;
+    --primary-contrast: 0 0% 100%;
+
+    --secondary: 172 65% 26%;
+    --secondary-light: 172 65% 36%;
+    --secondary-dark: 172 65% 16%;
+    --secondary-contrast: 0 0% 100%;
+
+    --accent-1: 21 58% 61%;
+    --accent-1-light: 21 58% 71%;
+    --accent-1-dark: 21 58% 51%;
+    --accent-1-contrast: 270 9% 14%;
+
+    --accent-2: 210 52% 43%;
+    --accent-2-light: 210 52% 53%;
+    --accent-2-dark: 210 52% 33%;
+    --accent-2-contrast: 0 0% 100%;
+
+    --accent-3: 276 15% 52%;
+    --accent-3-light: 276 15% 62%;
+    --accent-3-dark: 276 15% 42%;
+    --accent-3-contrast: 0 0% 100%;
+
+    --accent-4: 25 24% 62%;
+    --accent-4-light: 25 24% 72%;
+    --accent-4-dark: 25 24% 52%;
+    --accent-4-contrast: 270 9% 14%;
+
+    color-scheme: light;
+  }
+  .theme-aubergine.dark {
+    --primary: 279 24% 46%;
+    --primary-light: 279 24% 56%;
+    --primary-dark: 279 24% 36%;
+    --primary-contrast: 0 0% 100%;
+
+    --secondary: 172 65% 41%;
+    --secondary-light: 172 65% 51%;
+    --secondary-dark: 172 65% 31%;
+    --secondary-contrast: 270 9% 10%;
+
+    --accent-1: 21 58% 75%;
+    --accent-1-light: 21 58% 85%;
+    --accent-1-dark: 21 58% 65%;
+    --accent-1-contrast: 270 9% 10%;
+
+    --accent-2: 210 52% 58%;
+    --accent-2-light: 210 52% 68%;
+    --accent-2-dark: 210 52% 48%;
+    --accent-2-contrast: 270 9% 10%;
+
+    --accent-3: 276 15% 67%;
+    --accent-3-light: 276 15% 77%;
+    --accent-3-dark: 276 15% 57%;
+    --accent-3-contrast: 270 9% 10%;
+
+    --accent-4: 25 24% 75%;
+    --accent-4-light: 25 24% 85%;
+    --accent-4-dark: 25 24% 65%;
+    --accent-4-contrast: 270 9% 10%;
+
+    color-scheme: dark;
+  }
+}
