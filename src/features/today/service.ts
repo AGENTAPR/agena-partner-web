@@ -96,6 +96,10 @@ function persist(ctx: RequestContext, state: MockState) {
 }
 
 function assertVariant(ctx: RequestContext) {
+  if (ctx.variant === "loading") {
+    // Simulated slow load — handled by caller delay, not an error.
+    return;
+  }
   if (ctx.variant === "forbidden") {
     throw new TodayApiError("FORBIDDEN", "Scenario variant denies access", 403);
   }
