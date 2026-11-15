@@ -109,7 +109,6 @@ export default function User() {
                         </Typography>
                       </Box>
 
-                      <Box></Box>
                       <Divider className="large" />
                       <MenuList className="p-0">
                         <MenuItem
