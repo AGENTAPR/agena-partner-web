@@ -634,51 +634,55 @@ export function TodayExperience() {
             ) : null}
 
             {vm.showInsights && vm.insights.length > 0 ? (
-              <Grid size={12}>
-                <Typography variant="h6" component="h6" className="mb-3">
-                  {t("today-insights-title")}
-                </Typography>
-                <Grid container spacing={2.5}>
-                  {vm.insights.map((i, idx) => {
-                    const Icon = i.iconKey ? INSIGHT_ICONS[i.iconKey] : undefined;
-                    const tile = (
-                      <>
-                        <Box
-                          className={`flex h-28 w-full flex-none items-center justify-center rounded-2xl ${
-                            idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
-                          }`}
-                        >
-                          {Icon ? (
-                            <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="large" />
-                          ) : null}
-                        </Box>
-                        <CardContent className="text-center">
-                          <Typography variant="body1" className="text-text-secondary leading-5">
-                            {t(i.labelKey)}
-                          </Typography>
-                          <Typography variant="h5" className="leading-5">
-                            {i.valueKey}
-                          </Typography>
-                        </CardContent>
-                      </>
-                    );
-                    return (
-                      <Grid key={i.id} size={{ xs: 6, sm: 3 }}>
-                        {i.to ? (
-                          <Card
-                            component={Link}
-                            to={i.to}
-                            className="flex flex-col p-1 transition-transform hover:scale-[1.02]"
-                          >
-                            {tile}
-                          </Card>
-                        ) : (
-                          <Card className="flex flex-col p-1">{tile}</Card>
-                        )}
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Card className="h-full">
+                  <CardContent>
+                    <Typography variant="h6" className="mb-3">
+                      {t("today-insights-title")}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {vm.insights.map((i, idx) => {
+                        const Icon = i.iconKey ? INSIGHT_ICONS[i.iconKey] : undefined;
+                        const content = (
+                          <Box className="flex items-center gap-3">
+                            <Box
+                              className={`flex h-14 w-14 flex-none items-center justify-center rounded-xl ${
+                                idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
+                              }`}
+                            >
+                              {Icon ? (
+                                <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="medium" />
+                              ) : null}
+                            </Box>
+                            <Box className="min-w-0">
+                              <Typography variant="h5" className="leading-5">
+                                {i.valueKey}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary" className="leading-4">
+                                {t(i.labelKey)}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        );
+                        return (
+                          <Grid key={i.id} size={12}>
+                            {i.to ? (
+                              <Card
+                                component={Link}
+                                to={i.to}
+                                className="flex p-2 transition-transform hover:scale-[1.02]"
+                              >
+                                {content}
+                              </Card>
+                            ) : (
+                              <Card className="flex p-2">{content}</Card>
+                            )}
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+                  </CardContent>
+                </Card>
               </Grid>
             ) : null}
 
