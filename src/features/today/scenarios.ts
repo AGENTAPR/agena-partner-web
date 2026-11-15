@@ -1,11 +1,11 @@
-import type { LifecycleStatus, TodayView } from "./models";
+import type { AgentLifecycle, JourneyPhase, LifecycleStatus, TodayView } from "./models";
 
 export interface TodayScenario {
   id: string;
   lifecycle: LifecycleStatus;
   labelKey: string;
   /** Base fixture; the mock store clones it per actor+variant. */
-  view: Omit<TodayView, "meta">;
+  view: ScenarioView;
 }
 
 const basePermissions = {
@@ -15,10 +15,37 @@ const basePermissions = {
   canViewTeam: false,
 };
 
-function mk(
-  partial: Omit<TodayView, "meta" | "lifecycle" | "eligibility"> & Pick<TodayView, "lifecycle" | "eligibility">,
-): Omit<TodayView, "meta"> {
+type ScenarioView = Omit<
+  TodayView,
+  "meta" | "agentLifecycle" | "journeyPhase" | "nextBestAction"
+>;
+
+function mk(partial: ScenarioView): ScenarioView {
   return partial;
+}
+
+/** Map contract lifecycle string → normalized lifecycle + journey phase. */
+export function mapLifecycle(status: LifecycleStatus): {
+  agentLifecycle: AgentLifecycle;
+  journeyPhase?: JourneyPhase;
+} {
+  switch (status) {
+    case "CANDIDATE":
+      return { agentLifecycle: "CANDIDATE" };
+    case "ONBOARDING":
+      return { agentLifecycle: "ONBOARDING" };
+    case "LEARNING":
+      return { agentLifecycle: "ONBOARDING", journeyPhase: "LEARNING" };
+    case "CERTIFICATION_PENDING":
+      return { agentLifecycle: "PENDING_ACTIVATION", journeyPhase: "CERTIFICATION_PENDING" };
+    case "ACTIVE_ELIGIBLE":
+    case "ACTIVE_INELIGIBLE":
+      return { agentLifecycle: "ACTIVE" };
+    case "SUSPENDED":
+      return { agentLifecycle: "SUSPENDED" };
+    case "OFFBOARDING":
+      return { agentLifecycle: "OFFBOARDING" };
+  }
 }
 
 const JOURNEY_BASE = [
@@ -77,6 +104,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-application-created" }],
       insights: [],
       permissions: { ...basePermissions, canUpdateTasks: true },
+      actionPanel: { titleKey:"today-panel-candidate-title", descriptionKey:"today-panel-candidate-desc", steps:[{id:"s1",labelKey:"today-panel-candidate-s1"},{id:"s2",labelKey:"today-panel-candidate-s2"}], taskId:"t-apply-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-candidate-result" },
     }),
   },
   {
@@ -127,6 +155,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-doc-submitted" }],
       insights: [],
       permissions: { ...basePermissions },
+      actionPanel: { titleKey:"today-panel-onboarding-title", descriptionKey:"today-panel-onboarding-desc", steps:[{id:"s1",labelKey:"today-panel-onboarding-s1"},{id:"s2",labelKey:"today-panel-onboarding-s2"}], taskId:"t-onb-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-onboarding-result" },
     }),
   },
   {
@@ -176,6 +205,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-course-enrolled" }],
       insights: [],
       permissions: { ...basePermissions },
+      actionPanel: { titleKey:"today-panel-learning-title", descriptionKey:"today-panel-learning-desc", steps:[{id:"s1",labelKey:"today-panel-learning-s1"},{id:"s2",labelKey:"today-panel-learning-s2"}], taskId:"t-learn-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-learning-result" },
     }),
   },
   {
@@ -214,6 +244,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-assessment-passed" }],
       insights: [],
       permissions: { ...basePermissions },
+      actionPanel: { titleKey:"today-panel-cert-title", descriptionKey:"today-panel-cert-desc", steps:[{id:"s1",labelKey:"today-panel-cert-s1"}], taskId:"t-cert-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-cert-result" },
     }),
   },
   {
@@ -278,6 +309,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
         { id: "i-3", labelKey: "today-insight-claims-docs", valueKey: "1", to: "/portfolio/claims" },
       ],
       permissions: { ...basePermissions, canSell: true, canViewEarnings: true },
+      actionPanel: { titleKey:"today-panel-active-title", descriptionKey:"today-panel-active-desc", steps:[{id:"s1",labelKey:"today-panel-active-s1"}], taskId:"t-act-2", submitLabelKey:"today-panel-submit", resultKey:"today-panel-active-result" },
     }),
   },
   {
@@ -334,6 +366,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-eligibility-changed" }],
       insights: [],
       permissions: { ...basePermissions, canSell: false, canViewEarnings: true },
+      actionPanel: { titleKey:"today-panel-ineligible-title", descriptionKey:"today-panel-ineligible-desc", steps:[{id:"s1",labelKey:"today-panel-ineligible-s1"},{id:"s2",labelKey:"today-panel-ineligible-s2"}], taskId:"t-inel-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-ineligible-result" },
     }),
   },
   {
@@ -383,6 +416,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-status-changed" }],
       insights: [],
       permissions: { ...basePermissions, canViewEarnings: true },
+      actionPanel: { titleKey:"today-panel-suspended-title", descriptionKey:"today-panel-suspended-desc", steps:[{id:"s1",labelKey:"today-panel-suspended-s1"}], taskId:"t-sus-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-suspended-result" },
     }),
   },
   {
@@ -424,6 +458,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-offboard-started" }],
       insights: [],
       permissions: { ...basePermissions, canViewEarnings: true },
+      actionPanel: { titleKey:"today-panel-offboard-title", descriptionKey:"today-panel-offboard-desc", steps:[{id:"s1",labelKey:"today-panel-offboard-s1"}], taskId:"t-off-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-offboard-result" },
     }),
   },
 ];

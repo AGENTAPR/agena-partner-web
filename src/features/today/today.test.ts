@@ -157,3 +157,38 @@ describe("view-model", () => {
     expect(toTodayViewModel(null, false, "DEPENDENCY_UNAVAILABLE").state).toBe("DEPENDENCY_UNAVAILABLE");
   });
 });
+
+describe("lifecycle normalization + next best action", () => {
+  it("mapLifecycle separates lifecycle from journey phase", async () => {
+    const { mapLifecycle } = await import("./scenarios");
+    expect(mapLifecycle("LEARNING")).toEqual({ agentLifecycle: "ONBOARDING", journeyPhase: "LEARNING" });
+    expect(mapLifecycle("CERTIFICATION_PENDING").agentLifecycle).toBe("PENDING_ACTIVATION");
+    expect(mapLifecycle("ACTIVE_INELIGIBLE").agentLifecycle).toBe("ACTIVE");
+    expect(mapLifecycle("SUSPENDED").agentLifecycle).toBe("SUSPENDED");
+  });
+
+  it("nextBestAction recomputes after task completion", async () => {
+    const { selectNextBestAction } = await import("./service");
+    const view = await svc.getToday(ctx("active-eligible"));
+    const first = view.nextBestAction;
+    expect(first?.taskId).toBeTruthy();
+    // Complete the NBA task, reload, expect a different or clear action
+    const task = view.tasks.find((t) => t.id === first!.taskId)!;
+    if (task.completable) {
+      await svc.updateTask(ctx("active-eligible"), task.id, {
+        action: "complete",
+        expectedVersion: task.expectedVersion,
+      });
+    }
+    const after = await svc.getToday(ctx("active-eligible"));
+    const second = selectNextBestAction(after);
+    expect(second?.taskId).not.toBe(first?.taskId);
+  });
+
+  it("critical blocker outranks regular tasks", async () => {
+    const { selectNextBestAction } = await import("./service");
+    const view = await svc.getToday(ctx("active-ineligible"));
+    const nba = selectNextBestAction(view);
+    expect(nba?.taskId).toBe("t-inel-1"); // CRITICAL remediation first
+  });
+});

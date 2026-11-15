@@ -4,6 +4,33 @@
  * Synthetic/mock data only — no production PII.
  */
 
+/** Normalized agent lifecycle — independent of selling eligibility. */
+export type AgentLifecycle =
+  | "CANDIDATE"
+  | "ONBOARDING"
+  | "PENDING_ACTIVATION"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "OFFBOARDING"
+  | "TERMINATED";
+
+/** Journey phases are presentation states, not lifecycle enum values. */
+export type JourneyPhase = "LEARNING" | "CERTIFICATION_PENDING" | "READY";
+
+/** Eight experience scenarios — UI-level, not lifecycle enums. */
+export type TodayScenarioId =
+  | "candidate"
+  | "onboarding"
+  | "learning"
+  | "certification-pending"
+  | "active-eligible"
+  | "active-ineligible"
+  | "suspended"
+  | "offboarding";
+
+export type SellingEligibility = "ELIGIBLE" | "INELIGIBLE" | "NOT_APPLICABLE";
+
+/** Contract-level lifecycle strings (pre-normalization values). */
 export type LifecycleStatus =
   | "CANDIDATE"
   | "ONBOARDING"
@@ -13,8 +40,6 @@ export type LifecycleStatus =
   | "ACTIVE_INELIGIBLE"
   | "SUSPENDED"
   | "OFFBOARDING";
-
-export type SellingEligibility = "ELIGIBLE" | "INELIGIBLE" | "NOT_APPLICABLE";
 
 export type TaskStatus = "OPEN" | "COMPLETED" | "BLOCKED";
 export type TaskPriority = "CRITICAL" | "HIGH" | "NORMAL" | "LOW";
@@ -71,6 +96,24 @@ export interface BusinessInsight {
   to?: string;
 }
 
+/** Today-scoped contextual action — a mock interaction completed inside Today. */
+export interface TodayActionStep {
+  id: string;
+  labelKey: string;
+  descriptionKey?: string;
+}
+
+export interface TodayActionPanel {
+  titleKey: string;
+  descriptionKey: string;
+  steps: TodayActionStep[];
+  /** Task completed when the panel action succeeds. */
+  taskId: string;
+  submitLabelKey: string;
+  /** Result copy shown after success — honest, not authoritative. */
+  resultKey: string;
+}
+
 export interface TodayHeroCta {
   labelKey: string;
   /** In-app route destination. */
@@ -95,7 +138,16 @@ export interface DisplayPermissions {
 }
 
 export interface TodayView {
+  /** Normalized lifecycle derived from the scenario. */
+  agentLifecycle: AgentLifecycle;
+  /** Journey phase within onboarding/activation. */
+  journeyPhase?: JourneyPhase;
+  /** Original contract lifecycle string kept for adapter mapping. */
   lifecycle: LifecycleStatus;
+  /** Today-scoped contextual action panel (mock interactions). */
+  actionPanel?: TodayActionPanel;
+  /** Recomputed next-best-action descriptor. */
+  nextBestAction?: { titleKey: string; ctaLabelKey: string; taskId?: string; to?: string };
   eligibility: SellingEligibility;
   hero: TodayHero;
   blockers: TodayBlocker[];
