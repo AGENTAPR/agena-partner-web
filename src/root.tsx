@@ -20,8 +20,10 @@ import {
 } from "@/constants";
 import type { PartnerContext } from "@/features/auth/types";
 import { getRequestLocale } from "@/i18n/locale";
-import { authGate, getAuthMode, isPublicPath } from "@/server/auth.server";
+import { authGate, isPublicPath } from "@/server/auth.server";
 import { ContentType } from "@/types/types";
+
+const BFF_PROXY_PATHS = new Set(["/auth/login", "/auth/callback", "/auth/session", "/auth/me"]);
 
 export interface RootLoaderData {
   locale: LocaleOption;
@@ -29,7 +31,6 @@ export interface RootLoaderData {
   mode: ModeVariant;
   effectiveMode: "light" | "dark";
   content: ContentType;
-  authMode: "mock" | "live";
   authenticated: boolean;
   partner: PartnerContext | null;
   partnerError: "UNAVAILABLE" | "FORBIDDEN" | null;
@@ -46,6 +47,7 @@ function readCookie(cookieHeader: string | null, name: string): string | undefin
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
+  const pathname = url.pathname;
   // Server-side redirect for the app entry point — works without client JS.
   if (url.pathname === "/") {
     throw redirect("/today");
@@ -74,18 +76,31 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     ? (contentRaw as ContentType)
     : DEFAULTS.contentType;
 
+  // Proxied BFF endpoints are resource routes — no document render, so
+  // skip the auth gate (the BFF enforces auth on the upstream call).
+  if (pathname.startsWith("/api/") || BFF_PROXY_PATHS.has(pathname)) {
+    return {
+      locale,
+      theme,
+      mode,
+      effectiveMode,
+      content,
+      authenticated: false,
+      partner: null,
+      partnerError: null,
+    } satisfies RootLoaderData;
+  }
+
   // Server-side auth gate — private routes require a session.
   // Anonymous users are redirected to sign-in with a safe return target.
-  const pathname = url.pathname;
   const search = url.search;
-  let authMode: "mock" | "live" = getAuthMode(context);
   let authenticated = false;
   let partner: PartnerContext | null = null;
   let partnerError: "UNAVAILABLE" | "FORBIDDEN" | null = null;
 
   if (!isPublicPath(pathname)) {
     const gate = await authGate(request, context);
-    authenticated = gate.session !== null;
+    authenticated = gate.authenticated;
     partner = gate.partner;
     partnerError = gate.partnerError;
     if (!authenticated) {
@@ -93,9 +108,8 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       throw redirect(`/auth/sign-in?redirectTo=${returnTo}`);
     }
   } else {
-    authMode = getAuthMode(context);
     const gate = await authGate(request, context);
-    authenticated = gate.session !== null;
+    authenticated = gate.authenticated;
     partner = gate.partner;
     partnerError = gate.partnerError;
   }
@@ -106,7 +120,6 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     mode,
     effectiveMode,
     content,
-    authMode,
     authenticated,
     partner,
     partnerError,

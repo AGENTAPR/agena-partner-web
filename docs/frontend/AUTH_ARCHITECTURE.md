@@ -1,139 +1,140 @@
 # Authentication Architecture — Averuna Partner Web
 
-Status: **FE MOCK DONE** · **LIVE INTEGRATED: NOT YET** (no verified Keycloak/BFF endpoints)
+Status: **LIVE INTEGRATED (dev environment)** — verified against the real
+Keycloak `iaop-dev` realm and Rust Agent BFF on InstaBox.
+Mock authentication has been removed; auth is always live.
 
 ## 1. Ownership model
 
 ```
-Browser ──same-origin HTTPS──▶ React Router SSR (Cloudflare Worker)
-                                    │ server-to-server
+Browser ──same-origin HTTPS──▶ Partner SSR (React Router / Cloudflare Worker)
+                                    │ reverse proxy (server-to-server)
                                     ▼
-                              Rust Agent BFF  ──OIDC──▶ Keycloak
+                              Rust Agent BFF ──OIDC AuthCode+PKCE──▶ Keycloak
 ```
 
-- **Keycloak** is the IdP. Partner login = OIDC Authorization Code Flow + PKCE (S256).
-- **Rust Agent BFF** is the intended owner of the OIDC transaction, token lifecycle,
-  session validity, refresh and revocation.
-- **React Router server** owns only the browser-facing cookie session and route
-  protection. It must not run a second, independent auth system.
-- **Browser** receives only an opaque, HttpOnly session cookie. No `keycloak-js`,
-  no OAuth tokens in cookies/localStorage/sessionStorage.
+- **Keycloak** (`iaop-dev` realm) is the IdP. Client `iaop-agent-bff`,
+  Authorization Code Flow + PKCE S256.
+- **Rust Agent BFF** owns the complete OIDC transaction: `/auth/login`,
+  `/auth/callback` (state/nonce/PKCE validation, code redemption), session
+  store, refresh, revocation, logout.
+- **Partner SSR** is a *same-origin reverse proxy* for auth + API traffic.
+  It owns no session lifecycle and never sees OAuth tokens.
+- **Browser** holds only the BFF's host-only `__Host-iaop_session` cookie
+  (HttpOnly, Secure, SameSite=Lax), bound to the frontend origin by the proxy.
 
-## 2. Implemented contract boundary
+## 2. Same-origin strategy (implemented)
 
-`src/server/auth.server.ts` defines `AuthService`:
+The BFF session cookie is host-only, so the entire auth chain must stay on
+the browser-facing origin:
 
-- `getSession(request, context)` → `AuthenticatedSession | null`
-- `beginLogin(returnTo, request, context)` → `Response` (redirect)
-- `completeCallback(request, context)` → `Response`
-- `logout(request, context)` → `Response`
-- `getPartnerContext(session, context)` → `PartnerContext` (the `/me` boundary)
+1. `GET /auth/sign-in` → **Continue with SSO** (plain `href`, full-document
+   navigation — client-side routing cannot follow the cross-origin 303).
+2. `GET /auth/login?return_to=<path>` → proxied to BFF. The proxy pins
+   `redirect_uri = <request-origin>/auth/callback` (must be registered in
+   Keycloak client `iaop-agent-bff` **and** BFF `OIDC_REDIRECT_URI_ALLOWLIST`).
+   BFF 303 → Keycloak authorize; login-binding cookie set for this origin.
+3. Keycloak authenticates (MFA etc. handled by Keycloak).
+4. `GET /auth/callback?code&state` → proxied to BFF, which validates
+   state/nonce/PKCE, redeems the code, creates the session, sets
+   `__Host-iaop_session`, and 303s to the sanitized `return_to` path
+   (relative → resolves on this origin).
+5. `GET /api/v1/me` (proxied, cookie forwarded) → `PartnerContext` → header,
+   user menu, Today actor.
 
-Two adapters selected by `AUTH_MODE` env (`src/server/env.server.ts`):
-
-| Mode | Behavior |
-|---|---|
-| `mock` | `MockAuthService` — synthetic identities, deterministic, no backend needed. Only allowed outside production. |
-| `live` (default in production) | `LiveAuthService` — typed scaffold for the BFF OIDC contract. **Fails closed**: never falls back to mock. |
-
-`AUTH_MODE` unset → `mock` in development, `live` in production.
+Registered callback URIs today: BFF origin, developer-portal proxy,
+`http://localhost:3001/auth/callback` (dev frontend). Any new frontend
+origin must be added to **both** the Keycloak client and the BFF allowlist.
 
 ## 3. Routes
 
-| Route | Method | Purpose |
+| Route | Owner | Purpose |
 |---|---|---|
-| `/auth/sign-in` | GET | Public login page (SSO CTA + dev-only mock selector) |
-| `/auth/login` | GET | Begin login → BFF/OIDC authorization redirect (live) |
-| `/auth/callback` | GET | OIDC callback owner boundary (live) |
-| `/auth/mock-login` | POST | Mock sign-in. Rejects (404) unless `AUTH_MODE=mock`; requires same-origin POST |
-| `/auth/sign-out` | POST | Logout; CSRF-protected via same-origin + session CSRF token |
+| `/auth/sign-in` | Frontend page | SSO CTA + safe error/expired states |
+| `/auth/login` | BFF proxy | Begin OIDC (redirect_uri pinned) |
+| `/auth/callback` | BFF proxy | OIDC callback — BFF is sole transaction owner |
+| `/auth/session` | BFF proxy | Session info incl. `csrf_token` |
+| `/auth/me` | BFF proxy | BFF principal alias |
+| `/auth/logout` | BFF proxy | Session destroy (x-csrf-token required) |
+| `/api/v1/*` | BFF proxy | All BFF API traffic, cookie-forwarded |
+| `/auth/sign-out` | Frontend action | Fetches CSRF token → BFF logout → redirect |
 
-`src/root.tsx` loader is the server-side auth gate: anonymous requests to app
-routes get `302 → /auth/sign-in?redirectTo=<safe path>`.
+`src/routes/bff-proxy.tsx` implements the proxy: forwards method, path+query,
+Cookie/Content-Type/CSRF/idempotency headers and body; `redirect:"manual"`
+passes 3xx through; all upstream `Set-Cookie` headers are re-emitted.
 
-## 4. Session & cookie policy
+## 4. Session & security
 
-- Cookie: `averuna_session` — signed (HMAC via `SESSION_SECRET`), HttpOnly,
-  `SameSite=Lax`, `Path=/`, `Max-Age=28800` (8h mock). Production adds `Secure`
-  when the request URL is https.
-- Contents: opaque session data only — `authMode`, `subject`, `csrfToken`,
-  `expiresAt`, mock `identityId`. **No tokens, no PII claims.**
-- Session fixation: a fresh session (new CSRF token + expiry) is committed on
-  every successful login; logout destroys the session server-side.
-- Expired sessions are rejected by `getSession` and treated as anonymous.
+- Session = BFF `__Host-iaop_session` only. No tokens, PII, or session ids in
+  our own cookies, localStorage, or sessionStorage (E2E-verified).
+- Route protection: `src/root.tsx` loader → `authGate()` → cookie presence +
+  live `GET /api/v1/me`. Anonymous → `302 /auth/sign-in?redirectTo=<safe>`.
+- Safe redirects: `safe-redirect.ts` allowlist; BFF additionally sanitizes
+  `return_to` server-side (`OIDC_ALLOWED_RETURN_PATHS`).
+- CSRF: `/auth/sign-out` is POST + same-origin Origin/Referer check; BFF
+  logout additionally requires `x-csrf-token` matching the session.
+- Cookie flags: HttpOnly, Secure, SameSite=Lax, Path=/, host-only (`__Host-`).
+- `Cache-Control: no-store` on proxied responses; Worker adds security
+  headers + CSP (`worker/cloudflare-worker.ts`).
+- SSR auth gate runs before any protected render; proxied paths bypass the
+  document gate (BFF enforces auth upstream → 401).
 
-## 5. Safe redirects
+## 5. Partner context (`/api/v1/me`)
 
-`src/features/auth/safe-redirect.ts` — `safeRedirectPath()` accepts only
-same-origin absolute paths under an allowlist of app prefixes
-(`/today`, `/dashboard`, `/customers`, `/sales`, `/portfolio`, `/development`,
-`/agency`, `/support`, `/resources`, `/auth`). Rejects absolute URLs,
-protocol-relative `//host`, encoded bypasses (`%2f%2f`, backslashes), and
-anything else → falls back to `/today`. Covered by unit + E2E tests.
+Live DTO (envelope `{data:{...}}`): `subject`, `displayName`, `agentId`,
+`agentCode`, `lifecycleStatus`, `activeWorkspace`, `permissions[]`, `locale`,
+`timezone`, `sessionExpiresAt`, `partial`, `unavailableSections`.
 
-## 6. CSRF
+Mapping (`mapMeResponse` in `src/server/auth.server.ts`):
+- `lifecycleStatus: null` + `agentId: null` → `lifecycle="UNLINKED"`,
+  `scenarioId="unaffiliated"` → Today renders an honest "account not linked"
+  notice — never fabricated journey/KPIs.
+- `canSell` is granted only by explicit sell-scoped permission strings —
+  never inferred from lifecycle or account existence.
+- Header shows real `displayName` + initials avatar + `agentCode`/workspace.
 
-- All cookie-authenticated mutations (`/auth/mock-login`, `/auth/sign-out`)
-  are POST-only and verify `Origin`/`Referer` same-origin.
-- Sign-out additionally requires the session CSRF token in form data.
-- SameSite=Lax is defense-in-depth, not the sole mechanism.
+## 6. Environment
 
-## 7. Authenticated context (`/me` boundary)
+| Var | Where | Purpose |
+|---|---|---|
+| `AGENT_BFF_BASE_URL` | `.env` (dev) / wrangler `vars` | BFF origin for proxy + server calls |
+| `AGENT_BFF_TIMEOUT_MS` | same | upstream timeout (default 10000) |
+| `AGENT_BFF_INTERNAL_TOKEN` | secret (optional) | M2M token only if BFF contract requires |
+| `E2E_KC_USERNAME` / `E2E_KC_PASSWORD` | Playwright env | real Keycloak demo account |
+| `E2E_KC_UNLINKED_USER` / `E2E_KC_UNLINKED_PASSWORD` | Playwright env | unlinked-account test user |
 
-`src/features/auth/types.ts` + `mock-identities.ts` define `PartnerContext`:
-subject, displayName, email, `scenarioId`, `lifecycle`, `roles`, `workspace`,
-`canSell`, `locale`.
+## 7. Live integration evidence (2026-11-15)
 
-Mock identities cover: candidate, onboarding, learning, certification-pending,
-active-eligible, active-ineligible, suspended, offboarding, agency leader.
-Lifecycle and selling eligibility are separate fields — eligibility is never
-inferred from lifecycle alone.
+Infra changes applied on `iaop-keycloak-dev`:
+- Keycloak client `iaop-agent-bff`: added `http://localhost:3001/auth/callback`
+  to Valid Redirect URIs (PKCE S256 already enforced).
+- BFF `.env`/compose: `PARTNER_WEB_CALLBACK=http://localhost:3001/auth/callback`
+  added to `OIDC_REDIRECT_URI_ALLOWLIST`; `agent-bff` recreated.
+- Test user `e2e.unlinked` created (realm role `IAOP_AGENT`, no agent record).
 
-`user.tsx` renders display name, initials avatar, workspace; sign-out is a POST
-form. `/today` derives its actor from the authenticated context — no
-`agent-demo-001`, no `?scenario=` override in live mode.
+Verified:
+- `GET /auth/login` → 303 Keycloak authorize (code, S256, state, nonce,
+  localhost redirect_uri).
+- Full browser login `demo.agent.1` → callback → `__Host-iaop_session` →
+  `/api/v1/me` → "Demo Agent One" in header → `/today`.
+- Refresh keeps session; logout destroys BFF session + clears cookie;
+  `/today` after logout → sign-in. Back/forward cannot restore content.
+- Unlinked `e2e.unlinked` → unaffiliated notice (no fabricated data).
+- No tokens in localStorage/sessionStorage/document.cookie; session cookie
+  is HttpOnly (invisible to JS).
+- Anonymous `/api/v1/me` → 401; forged callback → no session.
+- Playwright: 25/25 PASS against live Keycloak+BFF (`react-router dev`).
+- `wrangler dev` SSR smoke: anon gate 302, `/api/v1/me` 401, `/auth/login`
+  303→Keycloak (unregistered origins safely fall back to BFF default
+  redirect_uri — allowlist enforced).
 
-## 8. Live-mode contract gaps (proposed, NOT verified)
+## 8. Remaining gaps / notes
 
-The Rust BFF auth endpoints are **not yet confirmed to exist**. Proposed
-operations the frontend needs:
-
-- `GET  /auth/login` (or BFF-issued authorize URL) — begin OIDC + PKCE
-- `GET  /auth/callback` — single OIDC transaction owner (BFF preferred)
-- `GET  /api/v1/me` — authenticated Partner context DTO
-- `POST /auth/logout` — session + Keycloak RP-initiated logout
-- `POST /auth/refresh` — server-side session refresh (optional)
-
-Until these are verified against `iaop-agent-bff`, `LiveAuthService` remains a
-scaffold and live mode reports the dependency as unavailable rather than
-silently degrading.
-
-## 9. Security notes
-
-- No credential logging anywhere; auth errors surface sanitized codes.
-- `AGENT_BFF_*` bindings are server-only (never `VITE_*`); browser never sees
-  the private BFF URL.
-- SSR auth gate runs before any protected loader data is returned; no
-  protected content is emitted for anonymous requests.
-- Worker sets `Cache-Control`-safe responses; auth redirects are never cached.
-- Worker hardening: `nodejs_compat` flag (required by `@emotion/server` SSR),
-  security headers + CSP in `worker/cloudflare-worker.ts`.
-
-## 10. Mock mode guide
-
-- Enable: `AUTH_MODE=mock` (automatic in `react-router dev`).
-- Sign-in page shows a dev-only identity selector; `/auth/mock-login` is
-  POST + same-origin only.
-- Session persists via the signed cookie across refresh; isolated per browser
-  session; deterministic per identity.
-- Scenario switcher on `/today` remains dev-only and stays coherent with the
-  mock identity's lifecycle/eligibility.
-
-## 11. Verification evidence
-
-- `npx tsc -b` — PASS
-- `npx vitest run` — 31 tests PASS (`src/features/auth`, `src/features/today`)
-- `npx playwright test` — 24 tests PASS (`e2e/auth.spec.ts`, `e2e/today.spec.ts`)
-- `npm run build` — PASS (client + SSR server bundle)
-- `wrangler dev` smoke — anonymous `/today` → 302 sign-in; mock login →
-  HttpOnly `averuna_session` cookie → authenticated `/today` 200.
+- `webOrigins: ["+"]` on client `iaop-agent-bff` remains permissive — separate
+  CORS-hardening item; browser never calls Keycloak token endpoints directly
+  so impact is limited, but should be tightened per
+  `IAOP_DEV_KEYCLOAK_CORS_HARDENING.md`.
+- Production deployment needs its own registered `redirect_uri` in Keycloak +
+  BFF allowlist before go-live.
+- BFF `/api/v1/me` `permissions` scopes drive `canSell`; confirm exact scope
+  names with backend when selling features ship.

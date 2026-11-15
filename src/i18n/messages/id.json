@@ -764,5 +764,7 @@
   "auth-mock-identity-agent-ineligible": "Mitra aktif tidak memenuhi syarat",
   "auth-mock-identity-agent-suspended": "Mitra ditangguhkan",
   "auth-mock-identity-agent-offboarding": "Mitra offboarding",
-  "auth-mock-identity-agency-leader": "Kepala agensi"
+  "auth-mock-identity-agency-leader": "Kepala agensi",
+  "today-unaffiliated-title": "Akun Anda belum tertaut ke profil agen",
+  "today-unaffiliated-body": "Anda sudah masuk, tetapi akun ini belum terkait dengan data agen. Jika menurut Anda ini keliru, hubungi administrator agensi atau dukungan Averuna."
 }

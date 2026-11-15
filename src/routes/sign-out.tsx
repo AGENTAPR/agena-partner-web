@@ -4,13 +4,13 @@ import { Form, redirect } from "react-router";
 
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 
-import { logout, verifySameOrigin } from "@/server/auth.server";
+import { performLogout, verifySameOrigin } from "@/server/auth.server";
 
 export async function action({ request, context }: ActionFunctionArgs) {
   if (!verifySameOrigin(request)) {
     return new Response("Forbidden", { status: 403 });
   }
-  const { location, headers } = await logout(request, context);
+  const { location, headers } = await performLogout(request, context);
   throw redirect(location, { headers });
 }
 

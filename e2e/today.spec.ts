@@ -1,11 +1,13 @@
-import { mockLogin } from "./helpers";
+import { liveCredentials, liveLogin } from "./helpers";
 
 import { expect, test } from "@playwright/test";
 
 const SHOTS = "e2e/screenshots";
+const creds = liveCredentials();
 
 test.beforeEach(async ({ page }) => {
-  await mockLogin(page);
+  test.skip(!creds, "E2E_KC_USERNAME/E2E_KC_PASSWORD not set — live auth required");
+  await liveLogin(page, creds!);
 });
 
 const scenarios = [

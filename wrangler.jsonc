@@ -8,6 +8,8 @@
   "vars": {
     // Non-secret configuration only. Secrets (AGENT_BFF_INTERNAL_TOKEN,
     // SESSION_SECRET) must be set via `wrangler secret put`.
+    // IAOP dev environment — replace for other deployments.
+    "AGENT_BFF_BASE_URL": "https://8082-agq5lpbszgbva3ygddcbarv6ea.instabox.tech",
     "AGENT_BFF_TIMEOUT_MS": "10000"
   },
   // AGENT_BFF_BASE_URL, AGENT_BFF_INTERNAL_TOKEN and SESSION_SECRET are

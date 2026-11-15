@@ -1,23 +1,21 @@
 import { useTranslation } from "react-i18next";
-import { Form, Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
-import { Alert, Box, Button, MenuItem, Paper, Select, Typography } from "@mui/material";
+import { Alert, Box, Button, Paper, Typography } from "@mui/material";
 
 import Logo from "@/components/logo/logo";
 import { useAuth } from "@/features/auth/auth-context";
-import { MOCK_IDENTITIES } from "@/features/auth/mock-identities";
 import { safeRedirectPath } from "@/features/auth/safe-redirect";
 import NiShieldCheck from "@/icons/nexture/ni-shield-check";
 
 const ERROR_KEYS: Record<string, string> = {
-  "invalid-identity": "auth-error-invalid-identity",
   "callback-invalid": "auth-error-callback",
   "dependency-unavailable": "auth-error-unavailable",
 };
 
 export default function Page() {
   const { t } = useTranslation();
-  const { mode, state } = useAuth();
+  const { state } = useAuth();
   const [params] = useSearchParams();
   const redirectTo = safeRedirectPath(params.get("redirectTo"));
   const errorKey = params.get("error");
@@ -65,47 +63,21 @@ export default function Page() {
             </Alert>
           ) : null}
 
-          {mode === "mock" ? (
-            <Form method="post" action="/auth/mock-login" className="flex flex-col gap-4">
-              <input type="hidden" name="returnTo" value={redirectTo} />
-              <Box className="flex flex-col gap-2">
-                <Typography variant="body2" className="text-text-secondary">
-                  {t("auth-mock-select-identity")}
-                </Typography>
-                <Select
-                  name="identity"
-                  defaultValue={MOCK_IDENTITIES[0]?.id}
-                  size="small"
-                  className="w-full"
-                  inputProps={{ "aria-label": t("auth-mock-select-identity") }}
-                >
-                  {MOCK_IDENTITIES.map((identity) => (
-                    <MenuItem key={identity.id} value={identity.id}>
-                      {identity.displayName} — {t(identity.descriptionKey)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-              <Button type="submit" variant="contained" size="large" className="w-full">
-                {t("auth-sign-in-sso")}
-              </Button>
-            </Form>
-          ) : (
-            <Box className="flex flex-col gap-3">
-              <Button
-                component={Link}
-                to={`/auth/login?return_to=${encodeURIComponent(redirectTo)}`}
-                variant="contained"
-                size="large"
-                className="w-full"
-              >
-                {t("auth-sign-in-sso")}
-              </Button>
-              <Typography variant="body2" className="text-text-secondary text-center">
-                {t("auth-sign-in-sso-note")}
-              </Typography>
-            </Box>
-          )}
+          <Box className="flex flex-col gap-3">
+            {/* Plain href — full-document navigation so the 303 chain
+                through /auth/login → Keycloak works without client routing. */}
+            <Button
+              href={`/auth/login?return_to=${encodeURIComponent(redirectTo)}`}
+              variant="contained"
+              size="large"
+              className="w-full"
+            >
+              {t("auth-sign-in-sso")}
+            </Button>
+            <Typography variant="body2" className="text-text-secondary text-center">
+              {t("auth-sign-in-sso-note")}
+            </Typography>
+          </Box>
         </Box>
       </Paper>
     </Box>

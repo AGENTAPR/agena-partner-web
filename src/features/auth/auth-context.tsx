@@ -2,7 +2,6 @@ import type { AuthContextValue } from "./types";
 import { createContext, type ReactNode, useContext } from "react";
 
 const AuthContext = createContext<AuthContextValue>({
-  mode: "mock",
   state: "ANONYMOUS",
   partner: null,
 });
