@@ -28,30 +28,19 @@ export interface TodayViewModel {
 }
 
 /** Lifecycle-aware composition: restrictions first, hero action, then work. */
-export function toTodayViewModel(
-  view: TodayView | null,
-  loading: boolean,
-  errorCode?: string,
-): TodayViewModel {
+export function toTodayViewModel(view: TodayView | null, loading: boolean, errorCode?: string): TodayViewModel {
   if (loading) return empty("LOADING");
   if (!view) return empty(mapError(errorCode));
 
   const hasContent =
-    view.tasks.length > 0 ||
-    view.agenda.length > 0 ||
-    view.journey.length > 0 ||
-    view.activity.length > 0;
-  const state: TodayUiState = !hasContent
-    ? "EMPTY"
-    : view.meta.partial
-      ? "PARTIAL"
-      : "READY";
+    view.tasks.length > 0 || view.agenda.length > 0 || view.journey.length > 0 || view.activity.length > 0;
+  const state: TodayUiState = !hasContent ? "EMPTY" : view.meta.partial ? "PARTIAL" : "READY";
 
   const isActive = view.agentLifecycle === "ACTIVE";
   const sortedTasks = [...view.tasks].sort(
     (a, b) =>
       ({ CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 })[a.priority] -
-      ({ CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 })[b.priority],
+      { CRITICAL: 0, HIGH: 1, NORMAL: 2, LOW: 3 }[b.priority],
   );
 
   return {

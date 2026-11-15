@@ -1,5 +1,12 @@
+import type { OperationReceipt, RequestContext, TaskStatus, TodayTask, TodayView } from "../models";
+import type { TodayVariant } from "../scenarios";
+import { createTodayService, type TodayExperienceService } from "../service";
+import { type TodayUiState, toTodayViewModel } from "../view-model";
+import { ScenarioSwitcher } from "./scenario-switcher";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import {
   Alert,
@@ -23,19 +30,12 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 
 import NiCheckFull from "@/icons/nexture/ni-check-full";
 import NiClock from "@/icons/nexture/ni-clock";
 import NiFlag from "@/icons/nexture/ni-flag";
 import NiShield from "@/icons/nexture/ni-shield";
-
-import type { OperationReceipt, RequestContext, TodayView } from "../models";
-import type { TodayVariant } from "../scenarios";
-import { createTodayService, type TodayExperienceService } from "../service";
-import { toTodayViewModel, type TodayUiState } from "../view-model";
-import { ScenarioSwitcher } from "./scenario-switcher";
+import NiUser from "@/icons/nexture/ni-user";
 
 const service: TodayExperienceService = createTodayService();
 
@@ -57,12 +57,12 @@ function useTodayData() {
   const [view, setView] = useState<TodayView | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorCode, setErrorCode] = useState<string>();
-  const [pendingOps, setPendingOps] = useState<Record<string, OperationReceipt>>({});
   const [actionError, setActionError] = useState<TodayUiState>();
   const [actionNotice, setActionNotice] = useState<string>();
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelResult, setPanelResult] = useState<string>();
   const [panelBusy, setPanelBusy] = useState(false);
+  const [busyTaskId, setBusyTaskId] = useState<string>();
   const timers = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const mounted = useRef(true);
 
@@ -91,8 +91,7 @@ function useTodayData() {
     }
   }, [context]);
 
-  // Initial + reload on scenario/variant change; stale responses are dropped
-  // because context identity changes and only the latest load writes state.
+  // Initial + reload on scenario/variant change; cancelled flag drops stale responses.
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
@@ -129,24 +128,18 @@ function useTodayData() {
 
   const pollOperation = useCallback(
     (receipt: OperationReceipt) => {
-      setPendingOps((p) => ({ ...p, [receipt.operationId]: receipt }));
       const tick = async () => {
         try {
           const op = await service.getOperation(context, receipt.operationId);
           if (!mounted.current) return;
-          setPendingOps((p) => {
-            const next = { ...p };
-            if (op.status === "PENDING") next[receipt.operationId] = op;
-            else delete next[receipt.operationId];
-            return next;
-          });
           if (op.status === "PENDING") {
             later(() => void tick(), 600);
           } else {
+            setActionNotice(op.status === "CONFIRMED" ? "today-op-confirmed" : "today-op-pending");
             void load();
           }
         } catch {
-          if (mounted.current) setPendingOps((p) => ({ ...p, [receipt.operationId]: receipt }));
+          if (mounted.current) later(() => void tick(), 600);
         }
       };
       later(() => void tick(), 600);
@@ -154,16 +147,17 @@ function useTodayData() {
     [context, later, load],
   );
 
-  const updateTask = useCallback(
-    async (taskId: string) => {
+  const mutateTask = useCallback(
+    async (taskId: string, action: "complete" | "reopen" | "resubmit") => {
       if (!view) return;
       const task = view.tasks.find((t) => t.id === taskId);
       if (!task || !view.permissions.canUpdateTasks) return;
       setActionError(undefined);
       setActionNotice(undefined);
+      setBusyTaskId(taskId);
       try {
         const receipt = await service.updateTask(context, taskId, {
-          action: task.status === "COMPLETED" ? "reopen" : "complete",
+          action,
           expectedVersion: task.expectedVersion,
         });
         if (receipt.status === "PENDING") {
@@ -183,36 +177,46 @@ function useTodayData() {
               : "DEPENDENCY_UNAVAILABLE",
         );
         void load();
+      } finally {
+        if (mounted.current) setBusyTaskId(undefined);
       }
     },
     [view, context, load, pollOperation],
   );
 
+  const toggleTask = useCallback(
+    (task: TodayTask) => {
+      if (task.status === "BLOCKED") return; // blocked tasks remediate via panel, never complete
+      void mutateTask(task.id, task.status === "COMPLETED" ? "reopen" : "complete");
+    },
+    [mutateTask],
+  );
+
   const runPanelAction = useCallback(async () => {
     if (!view?.actionPanel) return;
+    const task = view.tasks.find((t) => t.id === view.actionPanel!.taskId);
+    if (!task) return;
     setPanelBusy(true);
     setPanelResult(undefined);
     try {
-      const receipt = await service.updateTask(context, view.actionPanel.taskId, {
-        action: "complete",
-        expectedVersion:
-          view.tasks.find((t) => t.id === view.actionPanel!.taskId)?.expectedVersion ?? 0,
+      const action = task.status === "BLOCKED" ? "resubmit" : "complete";
+      const receipt = await service.updateTask(context, task.id, {
+        action,
+        expectedVersion: task.expectedVersion,
       });
       if (receipt.status === "PENDING") {
-        pollOperation(receipt);
         setPanelResult("today-op-pending");
+        pollOperation(receipt);
       } else {
         setPanelResult(view.actionPanel.resultKey);
         void load();
       }
     } catch (e) {
       const code = (e as { code?: string }).code;
-      setPanelResult(
-        code === "VERSION_CONFLICT" ? "today-error-version-conflict" : "today-error-validation-error",
-      );
+      setPanelResult(code === "VERSION_CONFLICT" ? "today-error-version-conflict" : "today-error-validation-error");
       void load();
     } finally {
-      setPanelBusy(false);
+      if (mounted.current) setPanelBusy(false);
     }
   }, [view, context, load, pollOperation]);
 
@@ -222,8 +226,8 @@ function useTodayData() {
     errorCode,
     actionError,
     actionNotice,
-    pendingOps,
-    updateTask,
+    busyTaskId,
+    updateTask: toggleTask,
     panelOpen,
     setPanelOpen,
     panelResult,
@@ -235,6 +239,138 @@ function useTodayData() {
 
 const SEVERITY_COLOR = { CRITICAL: "error", WARNING: "warning", INFO: "info" } as const;
 
+const TASK_STATUS_META: Record<
+  TaskStatus,
+  { color: "success" | "info" | "warning" | "error" | "default"; icon: typeof NiClock }
+> = {
+  COMPLETED: { color: "success", icon: NiCheckFull },
+  IN_REVIEW: { color: "info", icon: NiClock },
+  OPEN: { color: "default", icon: NiClock },
+  BLOCKED: { color: "error", icon: NiShield },
+};
+
+function formatWhen(value: string | undefined, language: string): string | undefined {
+  if (!value) return undefined;
+  // Date-only (YYYY-MM-DD) → format without timezone shift.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [y, m, d] = value.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    if (Number.isNaN(date.getTime())) return undefined;
+    return new Intl.DateTimeFormat(language, { day: "numeric", month: "short", year: "numeric" }).format(date);
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return new Intl.DateTimeFormat(language, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+/** Responsive task row — no absolute-positioned overlap at any width. */
+function TodayTaskItem({
+  task,
+  busy,
+  canUpdate,
+  onToggle,
+}: {
+  task: TodayTask;
+  busy: boolean;
+  canUpdate: boolean;
+  onToggle: (t: TodayTask) => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const status = TASK_STATUS_META[task.status];
+  const StatusIcon = status.icon;
+  const due = formatWhen(task.dueAt, i18n.language);
+
+  const actionButton =
+    task.completable && canUpdate ? (
+      <Button
+        size="small"
+        variant={task.status === "COMPLETED" ? "outlined" : "contained"}
+        disabled={busy || task.status === "BLOCKED" || task.status === "IN_REVIEW"}
+        onClick={() => onToggle(task)}
+      >
+        {task.status === "COMPLETED" ? t("today-task-reopen") : t("today-task-complete")}
+      </Button>
+    ) : task.actionTo ? (
+      <Button size="small" component={Link} to={task.actionTo} disabled={busy}>
+        {t(task.actionLabelKey ?? "today-cta-open")}
+      </Button>
+    ) : null;
+
+  return (
+    <Box className="border-grey-300/60 flex flex-col gap-2 rounded-lg border p-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-3">
+      <Box className="flex min-w-0 flex-1 items-start gap-3">
+        <StatusIcon size={20} className="text-text-secondary mt-0.5 shrink-0" />
+        <Box className="min-w-0 flex-1">
+          <Typography variant="body2" className="font-medium break-words">
+            {t(task.titleKey)}
+          </Typography>
+          {task.descriptionKey ? (
+            <Typography variant="caption" color="text.secondary" className="break-words">
+              {t(task.descriptionKey)}
+            </Typography>
+          ) : null}
+          <Box className="mt-1 flex flex-wrap items-center gap-2">
+            <Chip
+              size="small"
+              color={status.color}
+              variant="filled"
+              label={t(`today-status-${task.status.toLowerCase()}`)}
+              icon={<StatusIcon size={14} />}
+            />
+            {due ? (
+              <Typography variant="caption" color="text.secondary">
+                {t("today-due")}: {due}
+              </Typography>
+            ) : null}
+            {task.priority === "CRITICAL" ? (
+              <Chip size="small" color="error" label={t("today-priority-critical")} />
+            ) : null}
+          </Box>
+        </Box>
+      </Box>
+      {actionButton ? <Box className="flex shrink-0 justify-end">{actionButton}</Box> : null}
+    </Box>
+  );
+}
+
+function StatePanel({
+  icon,
+  titleKey,
+  bodyKey,
+  actionLabelKey,
+  onAction,
+}: {
+  icon: React.ReactNode;
+  titleKey: string;
+  bodyKey: string;
+  actionLabelKey?: string;
+  onAction?: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+        <Box className="text-text-secondary">{icon}</Box>
+        <Typography variant="h6">{t(titleKey)}</Typography>
+        <Typography variant="body2" color="text.secondary" className="max-w-md">
+          {t(bodyKey)}
+        </Typography>
+        {actionLabelKey && onAction ? (
+          <Button variant="contained" onClick={onAction}>
+            {t(actionLabelKey)}
+          </Button>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function TodayExperience() {
   const { t } = useTranslation();
   const {
@@ -243,18 +379,49 @@ export function TodayExperience() {
     errorCode,
     actionError,
     actionNotice,
-    pendingOps,
+    busyTaskId,
     updateTask,
     panelOpen,
     setPanelOpen,
     panelResult,
     panelBusy,
     runPanelAction,
+    reload,
   } = useTodayData();
   const vm = toTodayViewModel(view, loading, errorCode);
   const isDev = import.meta.env.DEV;
 
   const nba = vm.nextBestAction;
+  // Hero derives entirely from the NBA model — never mixes sources.
+  const heroTitleKey = nba?.titleKey ?? vm.hero.titleKey;
+  const heroDescKey = nba?.descriptionKey ?? vm.hero.descriptionKey;
+  const heroCtaLabel = nba?.ctaLabelKey ?? vm.hero.cta.labelKey;
+
+  const handleHeroAction = () => {
+    if (!nba) return;
+    if (view?.actionPanel && nba.taskId === view.actionPanel.taskId) {
+      setPanelOpen(true);
+      return;
+    }
+    if (nba.taskId) {
+      const task = view?.tasks.find((t) => t.id === nba.taskId);
+      if (task) {
+        toggleViaUpdate(task);
+        return;
+      }
+    }
+    if (nba.to) {
+      // route navigation handled by Link below
+    }
+  };
+
+  const toggleViaUpdate = (task: TodayTask) => {
+    if (task.status === "BLOCKED") {
+      if (view?.actionPanel) setPanelOpen(true);
+      return;
+    }
+    updateTask(task);
+  };
 
   return (
     <Box className="flex flex-col gap-6 p-4 sm:p-6">
@@ -269,11 +436,23 @@ export function TodayExperience() {
           {t(`today-error-${actionError.toLowerCase().replace(/_/g, "-")}`)}
         </Alert>
       ) : null}
-      {actionNotice && actionNotice !== "today-op-pending" ? (
+      {actionNotice === "today-op-confirmed" ? (
         <Alert severity="success" onClose={() => {}}>
           {t(actionNotice)}
         </Alert>
       ) : null}
+
+      {/* Page heading */}
+      <Box>
+        <Typography variant="h4" component="h1" className="font-bold">
+          {t("today-page-title")}
+        </Typography>
+        {view?.agentNameKey ? (
+          <Typography variant="body2" color="text.secondary">
+            {t(view.agentNameKey)}
+          </Typography>
+        ) : null}
+      </Box>
 
       {vm.state === "LOADING" ? (
         <Card>
@@ -287,73 +466,89 @@ export function TodayExperience() {
       ) : null}
 
       {vm.state === "PERMISSION_DENIED" ? (
-        <Alert severity="error">{t("today-error-permission-denied")}</Alert>
+        <StatePanel
+          icon={<NiShield size={40} />}
+          titleKey="today-state-forbidden-title"
+          bodyKey="today-error-permission-denied"
+          actionLabelKey="today-cta-retry"
+          onAction={() => void reload()}
+        />
       ) : null}
       {vm.state === "DEPENDENCY_UNAVAILABLE" ? (
-        <Alert severity="warning">{t("today-error-dependency-unavailable")}</Alert>
+        <StatePanel
+          icon={<NiClock size={40} />}
+          titleKey="today-state-unavailable-title"
+          bodyKey="today-error-dependency-unavailable"
+          actionLabelKey="today-cta-retry"
+          onAction={() => void reload()}
+        />
       ) : null}
       {vm.state === "VERSION_CONFLICT" ? (
-        <Alert severity="warning">{t("today-error-version-conflict")}</Alert>
+        <StatePanel
+          icon={<NiClock size={40} />}
+          titleKey="today-state-conflict-title"
+          bodyKey="today-error-version-conflict"
+          actionLabelKey="today-cta-retry"
+          onAction={() => void reload()}
+        />
       ) : null}
       {vm.state === "EMPTY" ? (
-        <Alert severity="info">{t("today-empty")}</Alert>
-      ) : null}
-      {vm.state === "PARTIAL" ? (
-        <Alert severity="info">{t("today-partial")}</Alert>
+        <StatePanel icon={<NiCheckFull size={40} />} titleKey="today-state-empty-title" bodyKey="today-empty" />
       ) : null}
 
-      {view && vm.state !== "LOADING" ? (
+      {view &&
+      !["LOADING", "PERMISSION_DENIED", "DEPENDENCY_UNAVAILABLE", "VERSION_CONFLICT", "EMPTY"].includes(vm.state) ? (
         <>
           {vm.criticalBlockers.map((b) => (
             <Alert key={b.id} severity={SEVERITY_COLOR[b.severity]} icon={<NiShield size={20} />}>
               <strong>{t(b.titleKey)}</strong> — {t(b.descriptionKey)}
             </Alert>
           ))}
+          {vm.state === "PARTIAL" ? <Alert severity="info">{t("today-partial")}</Alert> : null}
 
+          {/* Hero: single most important next action — one consistent model */}
           <Card className="bg-primary/5">
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Box className="flex flex-col gap-1">
-                <Typography variant="h5" component="h1" className="font-bold">
-                  {nba ? t(nba.titleKey) : t(vm.hero.titleKey)}
+                <Typography variant="overline" color="primary">
+                  {t("today-hero-eyebrow")}
+                </Typography>
+                <Typography variant="h5" component="h2" className="font-bold">
+                  {t(heroTitleKey)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {t(vm.hero.descriptionKey)}
+                  {t(heroDescKey)}
                 </Typography>
                 {vm.hero.statusKey ? (
-                  <Chip
-                    size="small"
-                    color="warning"
-                    variant="outlined"
-                    label={t(vm.hero.statusKey)}
-                  />
+                  <Chip size="small" color="warning" variant="filled" label={t(vm.hero.statusKey)} />
                 ) : null}
                 {vm.hero.progressLabelKey ? (
                   <Typography variant="caption" color="text.secondary">
                     {t(vm.hero.progressLabelKey)}
                   </Typography>
                 ) : null}
+                {nba?.dueAt ? (
+                  <Typography variant="caption" color="text.secondary">
+                    {t("today-due")}: {formatWhen(nba.dueAt, "en") ?? nba.dueAt}
+                  </Typography>
+                ) : null}
               </Box>
-              {nba?.to ? (
+              {nba?.to && !nba.taskId ? (
                 <Button component={Link} to={nba.to} variant="contained" size="large">
-                  {t(nba.ctaLabelKey)}
+                  {t(heroCtaLabel)}
                 </Button>
-              ) : nba?.taskId && view.permissions.canUpdateTasks ? (
+              ) : nba?.taskId ? (
                 <Button
                   variant="contained"
                   size="large"
-                  onClick={() => {
-                    if (view.actionPanel && nba.taskId === view.actionPanel.taskId) {
-                      setPanelOpen(true);
-                    } else {
-                      void updateTask(nba.taskId!);
-                    }
-                  }}
+                  onClick={handleHeroAction}
+                  disabled={busyTaskId === nba.taskId}
                 >
-                  {t(nba.ctaLabelKey)}
+                  {t(heroCtaLabel)}
                 </Button>
               ) : (
                 <Button component={Link} to={vm.hero.cta.to ?? "/today"} variant="contained" size="large">
-                  {t(vm.hero.cta.labelKey)}
+                  {t(heroCtaLabel)}
                 </Button>
               )}
             </CardContent>
@@ -388,45 +583,15 @@ export function TodayExperience() {
                       {t("today-tasks-empty")}
                     </Typography>
                   ) : (
-                    <List dense disablePadding>
+                    <List dense disablePadding className="flex flex-col">
                       {vm.primaryTasks.map((task) => (
-                        <ListItem
+                        <TodayTaskItem
                           key={task.id}
-                          disableGutters
-                          secondaryAction={
-                            task.completable && view.permissions.canUpdateTasks ? (
-                              <Button
-                                size="small"
-                                variant={task.status === "COMPLETED" ? "outlined" : "contained"}
-                                disabled={task.status === "BLOCKED"}
-                                onClick={() => void updateTask(task.id)}
-                              >
-                                {task.status === "COMPLETED"
-                                  ? t("today-task-reopen")
-                                  : t("today-task-complete")}
-                              </Button>
-                            ) : task.actionTo ? (
-                              <Button size="small" component={Link} to={task.actionTo}>
-                                {t(task.actionLabelKey ?? "today-cta-open")}
-                              </Button>
-                            ) : null
-                          }
-                        >
-                          <ListItemIcon className="min-w-8">
-                            {task.status === "COMPLETED" ? (
-                              <NiCheckFull size={18} />
-                            ) : (
-                              <NiClock size={18} />
-                            )}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={t(task.titleKey)}
-                            secondary={task.descriptionKey ? t(task.descriptionKey) : undefined}
-                          />
-                          {task.priority === "CRITICAL" ? (
-                            <Chip size="small" color="error" label={t("today-priority-critical")} />
-                          ) : null}
-                        </ListItem>
+                          task={task}
+                          busy={busyTaskId === task.id}
+                          canUpdate={view.permissions.canUpdateTasks}
+                          onToggle={toggleViaUpdate}
+                        />
                       ))}
                     </List>
                   )}
@@ -447,7 +612,10 @@ export function TodayExperience() {
                           <ListItemIcon>
                             <NiFlag size={18} />
                           </ListItemIcon>
-                          <ListItemText primary={t(a.titleKey)} secondary={a.at ?? undefined} />
+                          <ListItemText
+                            primary={t(a.titleKey)}
+                            secondary={formatWhen(a.at, "en") ?? a.at ?? undefined}
+                          />
                         </ListItem>
                       ))}
                     </List>
@@ -467,11 +635,7 @@ export function TodayExperience() {
                       {vm.insights.map((i) => (
                         <Grid key={i.id} size={4}>
                           {i.to ? (
-                            <Button
-                              component={Link}
-                              to={i.to}
-                              className="flex-col! h-auto! w-full!"
-                            >
+                            <Button component={Link} to={i.to} className="h-auto! w-full! flex-col!">
                               <Typography variant="h5">{i.valueKey}</Typography>
                               <Typography variant="caption">{t(i.labelKey)}</Typography>
                             </Button>
@@ -499,7 +663,10 @@ export function TodayExperience() {
                     <List dense disablePadding>
                       {vm.activity.map((a) => (
                         <ListItem key={a.id} disableGutters>
-                          <ListItemText primary={t(a.titleKey)} secondary={a.at} />
+                          <ListItemIcon>
+                            <NiUser size={18} />
+                          </ListItemIcon>
+                          <ListItemText primary={t(a.titleKey)} secondary={formatWhen(a.at, "en")} />
                         </ListItem>
                       ))}
                     </List>
@@ -508,10 +675,6 @@ export function TodayExperience() {
               </Grid>
             ) : null}
           </Grid>
-
-          {Object.keys(pendingOps).length > 0 ? (
-            <Alert severity="info">{t("today-op-pending")}</Alert>
-          ) : null}
         </>
       ) : null}
 
@@ -538,9 +701,7 @@ export function TodayExperience() {
                 ))}
               </List>
               {panelResult ? (
-                <Alert severity={panelResult.startsWith("today-error") ? "error" : "success"}>
-                  {t(panelResult)}
-                </Alert>
+                <Alert severity={panelResult.startsWith("today-error") ? "error" : "success"}>{t(panelResult)}</Alert>
               ) : null}
             </>
           ) : null}

@@ -6,13 +6,7 @@
 
 /** Normalized agent lifecycle — independent of selling eligibility. */
 export type AgentLifecycle =
-  | "CANDIDATE"
-  | "ONBOARDING"
-  | "PENDING_ACTIVATION"
-  | "ACTIVE"
-  | "SUSPENDED"
-  | "OFFBOARDING"
-  | "TERMINATED";
+  "CANDIDATE" | "ONBOARDING" | "PENDING_ACTIVATION" | "ACTIVE" | "SUSPENDED" | "OFFBOARDING" | "TERMINATED";
 
 /** Journey phases are presentation states, not lifecycle enum values. */
 export type JourneyPhase = "LEARNING" | "CERTIFICATION_PENDING" | "READY";
@@ -41,7 +35,7 @@ export type LifecycleStatus =
   | "SUSPENDED"
   | "OFFBOARDING";
 
-export type TaskStatus = "OPEN" | "COMPLETED" | "BLOCKED";
+export type TaskStatus = "OPEN" | "COMPLETED" | "BLOCKED" | "IN_REVIEW";
 export type TaskPriority = "CRITICAL" | "HIGH" | "NORMAL" | "LOW";
 
 export interface TodayTask {
@@ -130,6 +124,21 @@ export interface TodayHero {
   progressLabelKey?: string;
 }
 
+/** Immutable hero model — title, description, CTA all from one source. */
+export interface NextBestActionView {
+  id: string;
+  titleKey: string;
+  descriptionKey: string;
+  ctaLabelKey: string;
+  taskId?: string;
+  to?: string;
+  priority: TaskPriority;
+  taskStatus?: TaskStatus;
+  dueAt?: string;
+  /** True when the action opens the contextual panel instead of a route/task toggle. */
+  opensPanel?: boolean;
+}
+
 export interface DisplayPermissions {
   canSell: boolean;
   canUpdateTasks: boolean;
@@ -146,8 +155,10 @@ export interface TodayView {
   lifecycle: LifecycleStatus;
   /** Today-scoped contextual action panel (mock interactions). */
   actionPanel?: TodayActionPanel;
-  /** Recomputed next-best-action descriptor. */
-  nextBestAction?: { titleKey: string; ctaLabelKey: string; taskId?: string; to?: string };
+  /** Recomputed next-best-action — complete immutable presentation model. */
+  nextBestAction?: NextBestActionView;
+  /** Synthetic display identity for the mock actor (dev scenarios). */
+  agentNameKey?: string;
   eligibility: SellingEligibility;
   hero: TodayHero;
   blockers: TodayBlocker[];
@@ -170,7 +181,7 @@ export interface AgendaPage {
 }
 
 export interface UpdateTaskCommand {
-  action: "complete" | "reopen";
+  action: "complete" | "reopen" | "resubmit";
   expectedVersion: number;
 }
 

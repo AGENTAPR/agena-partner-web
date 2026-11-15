@@ -15,10 +15,7 @@ const basePermissions = {
   canViewTeam: false,
 };
 
-type ScenarioView = Omit<
-  TodayView,
-  "meta" | "agentLifecycle" | "journeyPhase" | "nextBestAction"
->;
+type ScenarioView = Omit<TodayView, "meta" | "agentLifecycle" | "journeyPhase" | "nextBestAction">;
 
 function mk(partial: ScenarioView): ScenarioView {
   return partial;
@@ -70,6 +67,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "CANDIDATE",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-candidate",
       hero: {
         titleKey: "today-hero-candidate-title",
         descriptionKey: "today-hero-candidate-desc",
@@ -81,6 +79,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-apply-1",
+          descriptionKey: "today-task-app-form-desc",
           titleKey: "today-task-application-form",
           kind: "APPLICATION",
           status: "OPEN",
@@ -104,7 +103,17 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-application-created" }],
       insights: [],
       permissions: { ...basePermissions, canUpdateTasks: true },
-      actionPanel: { titleKey:"today-panel-candidate-title", descriptionKey:"today-panel-candidate-desc", steps:[{id:"s1",labelKey:"today-panel-candidate-s1"},{id:"s2",labelKey:"today-panel-candidate-s2"}], taskId:"t-apply-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-candidate-result" },
+      actionPanel: {
+        titleKey: "today-panel-candidate-title",
+        descriptionKey: "today-panel-candidate-desc",
+        steps: [
+          { id: "s1", labelKey: "today-panel-candidate-s1" },
+          { id: "s2", labelKey: "today-panel-candidate-s2" },
+        ],
+        taskId: "t-apply-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-candidate-result",
+      },
     }),
   },
   {
@@ -114,6 +123,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "ONBOARDING",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-onboarding",
       hero: {
         titleKey: "today-hero-onboarding-title",
         descriptionKey: "today-hero-onboarding-desc",
@@ -132,6 +142,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-onb-1",
+          descriptionKey: "today-task-replace-cert-desc",
           titleKey: "today-task-replace-cert",
           kind: "DOCUMENT",
           status: "BLOCKED",
@@ -155,7 +166,17 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-doc-submitted" }],
       insights: [],
       permissions: { ...basePermissions },
-      actionPanel: { titleKey:"today-panel-onboarding-title", descriptionKey:"today-panel-onboarding-desc", steps:[{id:"s1",labelKey:"today-panel-onboarding-s1"},{id:"s2",labelKey:"today-panel-onboarding-s2"}], taskId:"t-onb-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-onboarding-result" },
+      actionPanel: {
+        titleKey: "today-panel-onboarding-title",
+        descriptionKey: "today-panel-onboarding-desc",
+        steps: [
+          { id: "s1", labelKey: "today-panel-onboarding-s1" },
+          { id: "s2", labelKey: "today-panel-onboarding-s2" },
+        ],
+        taskId: "t-onb-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-onboarding-result",
+      },
     }),
   },
   {
@@ -165,6 +186,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "LEARNING",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-learning",
       hero: {
         titleKey: "today-hero-learning-title",
         descriptionKey: "today-hero-learning-desc",
@@ -181,6 +203,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-learn-1",
+          descriptionKey: "today-task-module-desc",
           titleKey: "today-task-mandatory-module",
           kind: "LEARNING",
           status: "OPEN",
@@ -205,7 +228,17 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-course-enrolled" }],
       insights: [],
       permissions: { ...basePermissions },
-      actionPanel: { titleKey:"today-panel-learning-title", descriptionKey:"today-panel-learning-desc", steps:[{id:"s1",labelKey:"today-panel-learning-s1"},{id:"s2",labelKey:"today-panel-learning-s2"}], taskId:"t-learn-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-learning-result" },
+      actionPanel: {
+        titleKey: "today-panel-learning-title",
+        descriptionKey: "today-panel-learning-desc",
+        steps: [
+          { id: "s1", labelKey: "today-panel-learning-s1" },
+          { id: "s2", labelKey: "today-panel-learning-s2" },
+        ],
+        taskId: "t-learn-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-learning-result",
+      },
     }),
   },
   {
@@ -215,6 +248,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "CERTIFICATION_PENDING",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-cert",
       hero: {
         titleKey: "today-hero-cert-title",
         descriptionKey: "today-hero-cert-desc",
@@ -244,7 +278,14 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-assessment-passed" }],
       insights: [],
       permissions: { ...basePermissions },
-      actionPanel: { titleKey:"today-panel-cert-title", descriptionKey:"today-panel-cert-desc", steps:[{id:"s1",labelKey:"today-panel-cert-s1"}], taskId:"t-cert-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-cert-result" },
+      actionPanel: {
+        titleKey: "today-panel-cert-title",
+        descriptionKey: "today-panel-cert-desc",
+        steps: [{ id: "s1", labelKey: "today-panel-cert-s1" }],
+        taskId: "t-cert-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-cert-result",
+      },
     }),
   },
   {
@@ -253,6 +294,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     labelKey: "today-scenario-active-eligible",
     view: mk({
       lifecycle: "ACTIVE_ELIGIBLE",
+      agentNameKey: "today-agent-active",
       eligibility: "ELIGIBLE",
       hero: {
         titleKey: "today-hero-active-title",
@@ -264,6 +306,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-act-1",
+          descriptionKey: "today-task-urgent-desc",
           titleKey: "today-task-urgent-proposal",
           kind: "PROPOSAL",
           status: "OPEN",
@@ -276,6 +319,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
         },
         {
           id: "t-act-2",
+          descriptionKey: "today-task-followup-desc",
           titleKey: "today-task-customer-followup",
           kind: "FOLLOW_UP",
           status: "OPEN",
@@ -309,7 +353,14 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
         { id: "i-3", labelKey: "today-insight-claims-docs", valueKey: "1", to: "/portfolio/claims" },
       ],
       permissions: { ...basePermissions, canSell: true, canViewEarnings: true },
-      actionPanel: { titleKey:"today-panel-active-title", descriptionKey:"today-panel-active-desc", steps:[{id:"s1",labelKey:"today-panel-active-s1"}], taskId:"t-act-2", submitLabelKey:"today-panel-submit", resultKey:"today-panel-active-result" },
+      actionPanel: {
+        titleKey: "today-panel-active-title",
+        descriptionKey: "today-panel-active-desc",
+        steps: [{ id: "s1", labelKey: "today-panel-active-s1" }],
+        taskId: "t-act-2",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-active-result",
+      },
     }),
   },
   {
@@ -318,6 +369,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     labelKey: "today-scenario-active-ineligible",
     view: mk({
       lifecycle: "ACTIVE_ELIGIBLE",
+      agentNameKey: "today-agent-active",
       eligibility: "INELIGIBLE",
       hero: {
         titleKey: "today-hero-ineligible-title",
@@ -343,6 +395,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-inel-1",
+          descriptionKey: "today-task-cpd-desc",
           titleKey: "today-task-complete-cpd",
           kind: "CPD",
           status: "OPEN",
@@ -366,7 +419,17 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-eligibility-changed" }],
       insights: [],
       permissions: { ...basePermissions, canSell: false, canViewEarnings: true },
-      actionPanel: { titleKey:"today-panel-ineligible-title", descriptionKey:"today-panel-ineligible-desc", steps:[{id:"s1",labelKey:"today-panel-ineligible-s1"},{id:"s2",labelKey:"today-panel-ineligible-s2"}], taskId:"t-inel-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-ineligible-result" },
+      actionPanel: {
+        titleKey: "today-panel-ineligible-title",
+        descriptionKey: "today-panel-ineligible-desc",
+        steps: [
+          { id: "s1", labelKey: "today-panel-ineligible-s1" },
+          { id: "s2", labelKey: "today-panel-ineligible-s2" },
+        ],
+        taskId: "t-inel-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-ineligible-result",
+      },
     }),
   },
   {
@@ -376,6 +439,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "SUSPENDED",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-suspended",
       hero: {
         titleKey: "today-hero-suspended-title",
         descriptionKey: "today-hero-suspended-desc",
@@ -390,10 +454,11 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
           severity: "CRITICAL",
         },
       ],
-      journey: JOURNEY_ACTIVE.map((m) => ({ ...m, state: "BLOCKED" as const })),
+      journey: JOURNEY_ACTIVE,
       tasks: [
         {
           id: "t-sus-1",
+          descriptionKey: "today-task-respond-desc",
           titleKey: "today-task-respond-case",
           kind: "CASE",
           status: "OPEN",
@@ -416,7 +481,14 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-status-changed" }],
       insights: [],
       permissions: { ...basePermissions, canViewEarnings: true },
-      actionPanel: { titleKey:"today-panel-suspended-title", descriptionKey:"today-panel-suspended-desc", steps:[{id:"s1",labelKey:"today-panel-suspended-s1"}], taskId:"t-sus-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-suspended-result" },
+      actionPanel: {
+        titleKey: "today-panel-suspended-title",
+        descriptionKey: "today-panel-suspended-desc",
+        steps: [{ id: "s1", labelKey: "today-panel-suspended-s1" }],
+        taskId: "t-sus-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-suspended-result",
+      },
     }),
   },
   {
@@ -426,6 +498,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
     view: mk({
       lifecycle: "OFFBOARDING",
       eligibility: "NOT_APPLICABLE",
+      agentNameKey: "today-agent-offboard",
       hero: {
         titleKey: "today-hero-offboard-title",
         descriptionKey: "today-hero-offboard-desc",
@@ -436,6 +509,7 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       tasks: [
         {
           id: "t-off-1",
+          descriptionKey: "today-task-handover-desc",
           titleKey: "today-task-handover-customers",
           kind: "HANDOVER",
           status: "OPEN",
@@ -458,7 +532,14 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
       activity: [{ id: "a-1", titleKey: "today-activity-offboard-started" }],
       insights: [],
       permissions: { ...basePermissions, canViewEarnings: true },
-      actionPanel: { titleKey:"today-panel-offboard-title", descriptionKey:"today-panel-offboard-desc", steps:[{id:"s1",labelKey:"today-panel-offboard-s1"}], taskId:"t-off-1", submitLabelKey:"today-panel-submit", resultKey:"today-panel-offboard-result" },
+      actionPanel: {
+        titleKey: "today-panel-offboard-title",
+        descriptionKey: "today-panel-offboard-desc",
+        steps: [{ id: "s1", labelKey: "today-panel-offboard-s1" }],
+        taskId: "t-off-1",
+        submitLabelKey: "today-panel-submit",
+        resultKey: "today-panel-offboard-result",
+      },
     }),
   },
 ];

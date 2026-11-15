@@ -2,6 +2,7 @@ import {
   AgendaPage,
   AgentLifecycle,
   JourneyPhase,
+  NextBestActionView,
   OperationReceipt,
   RequestContext,
   TaskPage,
@@ -16,11 +17,7 @@ export interface TodayExperienceService {
   getToday(context: RequestContext): Promise<TodayView>;
   getTasks(context: RequestContext): Promise<TaskPage>;
   getAgenda(context: RequestContext): Promise<AgendaPage>;
-  updateTask(
-    context: RequestContext,
-    taskId: string,
-    command: UpdateTaskCommand,
-  ): Promise<OperationReceipt>;
+  updateTask(context: RequestContext, taskId: string, command: UpdateTaskCommand): Promise<OperationReceipt>;
   getOperation(context: RequestContext, operationId: string): Promise<OperationReceipt>;
   reset(context: RequestContext): void;
 }
@@ -125,73 +122,87 @@ function priorityRank(p: TodayTask["priority"]) {
 
 /**
  * Deterministic next-best-action selector.
- * Order: critical blocker remediation → overdue work → critical task →
- * high task → current journey milestone → earliest deadline → clear state.
- * Never selects blocked tasks or tasks the actor cannot act on.
+ * Order: critical blocker remediation → blocked-task remediation →
+ * overdue work → highest-priority open task → current journey milestone →
+ * earliest deadline → clear state. Never selects completed, in-review,
+ * or unauthorized work.
  */
-export function selectNextBestAction(view: TodayView): TodayView["nextBestAction"] {
-  const actionable = view.tasks.filter(
-    (t) => t.status === "OPEN" && view.permissions.canUpdateTasks !== false,
-  );
-  const open = actionable.filter((t) => t.status !== "COMPLETED");
+export function selectNextBestAction(view: TodayView): NextBestActionView | undefined {
+  const open = view.tasks.filter((t) => t.status === "OPEN");
+  const blocked = view.tasks.filter((t) => t.status === "BLOCKED");
+  const genericDesc = "today-nba-fallback-desc";
 
-  // 1. Critical blocker → first remediation task linked by kind/priority
+  const fromTask = (t: TodayTask, extra?: Partial<NextBestActionView>): NextBestActionView => ({
+    id: t.id,
+    titleKey: t.titleKey,
+    descriptionKey: t.descriptionKey ?? genericDesc,
+    ctaLabelKey: t.actionLabelKey ?? "today-cta-open",
+    taskId: t.id,
+    to: t.actionTo,
+    priority: t.priority,
+    taskStatus: t.status,
+    dueAt: t.dueAt,
+    ...extra,
+  });
+
+  // 1. Critical blocker → remediation: prefer a BLOCKED task (needs action),
+  //    else highest-priority open task.
   const critical = view.blockers.find((b) => b.severity === "CRITICAL");
   if (critical) {
-    const remediation = open.find((t) => t.priority === "CRITICAL") ?? open[0];
-    if (remediation) {
-      return {
-        titleKey: remediation.titleKey,
-        ctaLabelKey: remediation.actionLabelKey ?? "today-cta-open",
-        taskId: remediation.id,
-        to: remediation.actionTo,
-      };
-    }
+    const remediation =
+      blocked.sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0] ??
+      [...open].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0];
+    if (remediation) return fromTask(remediation);
   }
 
-  // 2. Overdue open task
+  // 2. Blocked-task remediation (needs resubmission, not completion)
+  const blockedRemediation = [...blocked].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0];
+  if (blockedRemediation) return fromTask(blockedRemediation);
+
+  // 3. Overdue open task
   const now = Date.parse(view.meta.generatedAt);
   const overdue = open
     .filter((t) => t.dueAt && Date.parse(t.dueAt) < now)
     .sort((a, b) => Date.parse(a.dueAt!) - Date.parse(b.dueAt!))[0];
-  if (overdue) {
-    return {
-      titleKey: overdue.titleKey,
-      ctaLabelKey: overdue.actionLabelKey ?? "today-cta-open",
-      taskId: overdue.id,
-      to: overdue.actionTo,
-    };
-  }
+  if (overdue) return fromTask(overdue);
 
   // 3-4. Highest-priority open task
-  const sorted = [...open].sort(
-    (a, b) => priorityRank(a.priority) - priorityRank(b.priority),
-  )[0];
-  if (sorted) {
-    return {
-      titleKey: sorted.titleKey,
-      ctaLabelKey: sorted.actionLabelKey ?? "today-cta-open",
-      taskId: sorted.id,
-      to: sorted.actionTo,
-    };
-  }
+  const sorted = [...open].sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))[0];
+  if (sorted) return fromTask(sorted);
 
   // 5. Current journey milestone
   const current = view.journey.find((m) => m.state === "CURRENT");
   if (current) {
-    return { titleKey: current.labelKey, ctaLabelKey: "today-cta-continue" };
+    return {
+      id: `journey-${current.id}`,
+      titleKey: current.labelKey,
+      descriptionKey: genericDesc,
+      ctaLabelKey: "today-cta-continue",
+      priority: "NORMAL",
+    };
   }
 
   // 6. Earliest agenda deadline
-  const nextAgenda = [...view.agenda].sort((a, b) =>
-    (a.at ?? "9999").localeCompare(b.at ?? "9999"),
-  )[0];
+  const nextAgenda = [...view.agenda].sort((a, b) => (a.at ?? "9999").localeCompare(b.at ?? "9999"))[0];
   if (nextAgenda) {
-    return { titleKey: nextAgenda.titleKey, ctaLabelKey: "today-cta-open" };
+    return {
+      id: nextAgenda.id,
+      titleKey: nextAgenda.titleKey,
+      descriptionKey: genericDesc,
+      ctaLabelKey: "today-cta-open",
+      priority: "NORMAL",
+    };
   }
 
   // 7. Clear state
-  return { titleKey: "today-hero-clear-title", ctaLabelKey: "today-cta-retry", to: "/today" };
+  return {
+    id: "clear",
+    titleKey: "today-hero-clear-title",
+    descriptionKey: "today-hero-clear-desc",
+    ctaLabelKey: "today-cta-retry",
+    to: "/today",
+    priority: "LOW",
+  };
 }
 
 export class MockTodayExperienceService implements TodayExperienceService {
@@ -237,11 +248,7 @@ export class MockTodayExperienceService implements TodayExperienceService {
     return { items: view.agenda };
   }
 
-  async updateTask(
-    context: RequestContext,
-    taskId: string,
-    command: UpdateTaskCommand,
-  ): Promise<OperationReceipt> {
+  async updateTask(context: RequestContext, taskId: string, command: UpdateTaskCommand): Promise<OperationReceipt> {
     assertVariant(context);
     const state = loadState(context);
     const task = state.tasks[taskId];
@@ -255,6 +262,9 @@ export class MockTodayExperienceService implements TodayExperienceService {
     }
     if (task.status === "BLOCKED" && command.action === "complete") {
       throw new TodayApiError("VALIDATION_ERROR", "Blocked tasks cannot be completed", 422);
+    }
+    if (task.status !== "BLOCKED" && command.action === "resubmit") {
+      throw new TodayApiError("VALIDATION_ERROR", "Only blocked tasks can be resubmitted", 422);
     }
 
     const operationId = `op-${context.scenarioId}-${++state.opSeq}`;
@@ -283,7 +293,7 @@ export class MockTodayExperienceService implements TodayExperienceService {
   private applyMutation(state: MockState, task: TodayTask, command: UpdateTaskCommand) {
     state.tasks[task.id] = {
       ...task,
-      status: command.action === "complete" ? "COMPLETED" : "OPEN",
+      status: command.action === "complete" ? "COMPLETED" : command.action === "resubmit" ? "IN_REVIEW" : "OPEN",
       expectedVersion: task.expectedVersion + 1,
     };
   }
@@ -328,11 +338,7 @@ export class MockTodayExperienceService implements TodayExperienceService {
  */
 export class LiveTodayExperienceService implements TodayExperienceService {
   private unavailable(): never {
-    throw new TodayApiError(
-      "DEPENDENCY_UNAVAILABLE",
-      "Agent experience service is not yet available",
-      503,
-    );
+    throw new TodayApiError("DEPENDENCY_UNAVAILABLE", "Agent experience service is not yet available", 503);
   }
   getToday(): Promise<TodayView> {
     return this.unavailable();
@@ -356,10 +362,7 @@ export function createTodayService(): TodayExperienceService {
   // Adapter selection is environment-controlled; mock is the default
   // experience until the live contract ships. Production builds never
   // receive mock fixtures unless explicitly configured.
-  const mode =
-    typeof import.meta !== "undefined" && import.meta.env
-      ? import.meta.env.VITE_TODAY_MODE
-      : undefined;
+  const mode = typeof import.meta !== "undefined" && import.meta.env ? import.meta.env.VITE_TODAY_MODE : undefined;
   if (mode === "live") return new LiveTodayExperienceService();
   return new MockTodayExperienceService();
 }

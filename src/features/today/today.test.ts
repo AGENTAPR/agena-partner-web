@@ -192,3 +192,38 @@ describe("lifecycle normalization + next best action", () => {
     expect(nba?.taskId).toBe("t-inel-1"); // CRITICAL remediation first
   });
 });
+
+describe("blocked-task remediation", () => {
+  it("resubmit moves BLOCKED task to IN_REVIEW, not COMPLETED", async () => {
+    const c = ctx("onboarding", "normal", "actor-onb-1");
+    const v = await svc.getToday(c);
+    const blocked = v.tasks.find((t) => t.status === "BLOCKED")!;
+    const receipt = await svc.updateTask(c, blocked.id, {
+      action: "resubmit",
+      expectedVersion: blocked.expectedVersion,
+    });
+    expect(receipt.status).toBe("CONFIRMED");
+    const after = await svc.getToday(c);
+    expect(after.tasks.find((t) => t.id === blocked.id)!.status).toBe("IN_REVIEW");
+  });
+
+  it("complete on BLOCKED task is rejected", async () => {
+    const c = ctx("onboarding", "normal", "actor-onb-2");
+    const v = await svc.getToday(c);
+    const blocked = v.tasks.find((t) => t.status === "BLOCKED")!;
+    await expect(
+      svc.updateTask(c, blocked.id, { action: "complete", expectedVersion: blocked.expectedVersion }),
+    ).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+  });
+
+  it("onboarding NBA selects blocked remediation over unrelated task", async () => {
+    const v = await svc.getToday(ctx("onboarding", "normal", "actor-onb-3"));
+    expect(v.nextBestAction?.taskId).toBe("t-onb-1");
+    expect(v.nextBestAction?.taskStatus).toBe("BLOCKED");
+  });
+
+  it("suspended journey preserves DONE milestones", async () => {
+    const v = await svc.getToday(ctx("suspended", "normal", "actor-sus-1"));
+    expect(v.journey.every((m) => m.state === "DONE")).toBe(true);
+  });
+});

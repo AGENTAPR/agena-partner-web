@@ -14,9 +14,9 @@ export default function Footer() {
         variant="text"
         className="hover:text-primary bg-transparent! font-normal"
         component={Link}
-        to="/"
+        to="/support"
       >
-        {t("footer-about")}
+        {t("footer-support")}
       </Button>
       <Button
         size="tiny"
@@ -24,9 +24,9 @@ export default function Footer() {
         variant="text"
         className="hover:text-primary bg-transparent! font-normal"
         component={Link}
-        to="/support"
+        to="/resources/documents"
       >
-        {t("footer-docs")}
+        {t("footer-resources")}
       </Button>
     </Box>
   );
