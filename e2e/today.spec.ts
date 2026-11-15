@@ -1,6 +1,12 @@
+import { mockLogin } from "./helpers";
+
 import { expect, test } from "@playwright/test";
 
 const SHOTS = "e2e/screenshots";
+
+test.beforeEach(async ({ page }) => {
+  await mockLogin(page);
+});
 
 const scenarios = [
   "candidate",

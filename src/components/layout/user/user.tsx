@@ -3,7 +3,7 @@ import UserModeSwitch from "./user-mode-switch";
 import UserThemeSwitch from "./user-theme-switch";
 import { SyntheticEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Form, useNavigate } from "react-router-dom";
 
 import { Avatar, Box, Card, CardContent, Divider, Fade, ListItemIcon, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -12,6 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import Popper from "@mui/material/Popper";
 
+import { useAuth } from "@/features/auth/auth-context";
 import NiBuilding from "@/icons/nexture/ni-building";
 import NiDocumentFull from "@/icons/nexture/ni-document-full";
 import NiFolder from "@/icons/nexture/ni-folder";
@@ -24,6 +25,16 @@ export default function User() {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
+  const { partner } = useAuth();
+  const displayName = partner?.displayName ?? null;
+  const initials = displayName
+    ? displayName
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : null;
 
   const handleToggle = () => {
     setOpen((prevOpen) => !prevOpen);
@@ -51,15 +62,17 @@ export default function User() {
           )}
           onClick={handleToggle}
         >
-          <Box>{t("user-signed-in")}</Box>
+          <Box>{displayName ?? t("user-signed-in")}</Box>
           <Avatar
-            alt="avatar"
-            src="/images/avatars/avatar-3.jpg"
+            alt={displayName ?? "avatar"}
+            src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
             className={cn(
               "large transition-all group-hover:ms-0.5 group-hover:h-8 group-hover:w-8",
               open && "ms-0.5 h-8! w-8!",
             )}
-          />
+          >
+            {initials}
+          </Avatar>
         </Button>
         {/* Desktop button */}
 
@@ -75,10 +88,12 @@ export default function User() {
           onClick={handleToggle}
           startIcon={
             <Avatar
-              alt="avatar"
-              src="/images/avatars/avatar-3.jpg"
+              alt={displayName ?? "avatar"}
+              src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
               className={cn("large transition-all group-hover:h-7 group-hover:w-7", open && "h-7! w-7!")}
-            />
+            >
+              {initials}
+            </Avatar>
           }
         />
         {/* Mobile button */}
@@ -100,12 +115,18 @@ export default function User() {
                   <CardContent>
                     <Box className="max-w-64 sm:w-72 sm:max-w-none">
                       <Box className="mb-4 flex flex-col items-center">
-                        <Avatar alt="avatar" src="/images/avatars/avatar-3.jpg" className="large mb-2" />
+                        <Avatar
+                          alt={displayName ?? "avatar"}
+                          src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
+                          className="large mb-2"
+                        >
+                          {initials}
+                        </Avatar>
                         <Typography variant="subtitle1" component="p">
-                          {t("user-signed-in")}
+                          {displayName ?? t("user-signed-in")}
                         </Typography>
                         <Typography variant="body2" component="p" className="text-text-secondary -mt-2">
-                          {t("user-signed-in-description")}
+                          {partner?.email ?? partner?.workspace ?? t("user-signed-in-description")}
                         </Typography>
                       </Box>
 
@@ -186,16 +207,11 @@ export default function User() {
                         </MenuItem>
                       </MenuList>
                       <Box className="my-8"></Box>
-                      <Button
-                        component={Link}
-                        to="/auth/sign-in"
-                        variant="outlined"
-                        size="tiny"
-                        color="grey"
-                        className="w-full"
-                      >
-                        {t("user-sign-out")}
-                      </Button>
+                      <Form method="post" action="/auth/sign-out">
+                        <Button type="submit" variant="outlined" size="tiny" color="grey" className="w-full">
+                          {t("user-sign-out")}
+                        </Button>
+                      </Form>
                     </Box>
                   </CardContent>
                 </Card>

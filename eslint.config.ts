@@ -11,7 +11,7 @@ import js from "@eslint/js";
 
 export default [
   {
-    ignores: ["dist", "node_modules", "public"],
+    ignores: ["dist", "build", "node_modules", "public", "e2e/screenshots", "test-results", ".react-router", ".wrangler"],
   },
   // Base JS & environment settings
   {
@@ -31,7 +31,7 @@ export default [
     settings: {
       react: { version: "detect" },
     },
-    ignores: ["dist", "node_modules", "public"],
+    ignores: ["dist", "build", "node_modules", "public", "e2e/screenshots", "test-results", ".react-router", ".wrangler"],
   },
   // Recommended rules
   js.configs.recommended,

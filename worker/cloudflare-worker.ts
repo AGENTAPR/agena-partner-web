@@ -1,7 +1,6 @@
-import { RouterContextProvider, createRequestHandler } from "react-router";
-import type { AppLoadContext, ServerBuild } from "react-router";
-
 import { cloudflareContext } from "../src/server/cloudflare-context";
+import type { AppLoadContext, ServerBuild } from "react-router";
+import { createRequestHandler, RouterContextProvider } from "react-router";
 
 // The React Router server bundle produced by `react-router build`
 // (virtual:react-router/server-build resolves to this file at build time).
@@ -10,7 +9,9 @@ const serverBuildModule = (await import("../build/server/index.js")) as {
 } & ServerBuild;
 const serverBuild: ServerBuild = serverBuildModule.default ?? serverBuildModule;
 
-const requestHandler = createRequestHandler(() => serverBuild, import.meta.env.MODE);
+// `import.meta.env` is a Vite-ism; under wrangler/esbuild it may be absent.
+const mode = (import.meta as ImportMeta & { env?: { MODE?: string } }).env?.MODE ?? "production";
+const requestHandler = createRequestHandler(() => serverBuild, mode);
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {

@@ -31,9 +31,10 @@ import {
   Typography,
 } from "@mui/material";
 
+import { useAuth } from "@/features/auth/auth-context";
+import NiCalendar from "@/icons/nexture/ni-calendar";
 import NiCheckFull from "@/icons/nexture/ni-check-full";
 import NiClock from "@/icons/nexture/ni-clock";
-import NiCalendar from "@/icons/nexture/ni-calendar";
 import NiDocumentFull from "@/icons/nexture/ni-document-full";
 import NiFlag from "@/icons/nexture/ni-flag";
 import NiShield from "@/icons/nexture/ni-shield";
@@ -44,17 +45,22 @@ const service: TodayExperienceService = createTodayService();
 
 function useTodayData() {
   const [params] = useSearchParams();
-  const scenarioId = params.get("scenario") ?? "active-eligible";
-  const variant = (params.get("variant") ?? "normal") as TodayVariant;
+  const { partner, mode } = useAuth();
+  const identityScenario = partner?.scenarioId ?? "active-eligible";
+  // Mock mode: scenario/variant query params are a dev-only override.
+  // Live mode: scenario comes from the authenticated partner context only.
+  const scenarioId = mode === "live" ? identityScenario : (params.get("scenario") ?? identityScenario);
+  const variant = (mode === "live" ? "normal" : (params.get("variant") ?? "normal")) as TodayVariant;
+  const actorId = partner?.subject ?? "anonymous";
 
   const context = useMemo<RequestContext>(
     () => ({
-      actorId: "agent-demo-001",
+      actorId,
       scenarioId,
       variant,
-      requestId: `req-${scenarioId}-${variant}`,
+      requestId: `req-${actorId}-${scenarioId}-${variant}`,
     }),
-    [scenarioId, variant],
+    [actorId, scenarioId, variant],
   );
 
   const [view, setView] = useState<TodayView | null>(null);
@@ -399,6 +405,7 @@ export function TodayExperience() {
   } = useTodayData();
   const vm = toTodayViewModel(view, loading, errorCode);
   const isDev = import.meta.env.DEV;
+  const { mode } = useAuth();
 
   const nba = vm.nextBestAction;
   // Hero derives entirely from the NBA model — never mixes sources.
@@ -434,7 +441,7 @@ export function TodayExperience() {
 
   return (
     <Box className="flex flex-col gap-10">
-      {isDev ? <ScenarioSwitcher /> : null}
+      {isDev && mode === "mock" ? <ScenarioSwitcher /> : null}
 
       <div aria-live="polite" className="sr-only">
         {actionNotice ? t(actionNotice) : ""}
