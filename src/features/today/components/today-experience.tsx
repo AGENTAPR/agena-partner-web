@@ -644,21 +644,19 @@ export function TodayExperience() {
                       {vm.insights.map((i, idx) => {
                         const Icon = i.iconKey ? INSIGHT_ICONS[i.iconKey] : undefined;
                         const content = (
-                          <Box className="flex flex-col gap-2 p-1">
-                            <Box className="flex items-center gap-3">
-                              <Box
-                                className={`flex h-12 w-12 flex-none items-center justify-center rounded-xl ${
-                                  idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
-                                }`}
-                              >
-                                {Icon ? (
-                                  <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="medium" />
-                                ) : null}
-                              </Box>
-                              <Typography variant="h6" className="leading-5">
-                                {i.valueKey}
-                              </Typography>
+                          <Box className="flex flex-col items-center gap-2 p-2 text-center">
+                            <Box
+                              className={`flex h-12 w-12 flex-none items-center justify-center rounded-xl ${
+                                idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
+                              }`}
+                            >
+                              {Icon ? (
+                                <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="medium" />
+                              ) : null}
                             </Box>
+                            <Typography variant="h5" className="leading-5">
+                              {i.valueKey}
+                            </Typography>
                             <Typography variant="caption" color="text.secondary" className="leading-4">
                               {t(i.labelKey)}
                             </Typography>
