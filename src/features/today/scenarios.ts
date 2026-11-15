@@ -348,9 +348,9 @@ export const TODAY_SCENARIOS: TodayScenario[] = [
         { id: "a-2", titleKey: "today-activity-commission-posted" },
       ],
       insights: [
-        { id: "i-1", labelKey: "today-insight-pending-proposals", valueKey: "3", to: "/sales/proposals" },
-        { id: "i-2", labelKey: "today-insight-upcoming-renewals", valueKey: "2", to: "/portfolio/renewals" },
-        { id: "i-3", labelKey: "today-insight-claims-docs", valueKey: "1", to: "/portfolio/claims" },
+        { id: "i-1", labelKey: "today-insight-pending-proposals", valueKey: "3", to: "/sales/proposals", iconKey: "NiDocumentFull" },
+        { id: "i-2", labelKey: "today-insight-upcoming-renewals", valueKey: "2", to: "/portfolio/renewals", iconKey: "NiCalendar" },
+        { id: "i-3", labelKey: "today-insight-claims-docs", valueKey: "1", to: "/portfolio/claims", iconKey: "NiShieldCheck" },
       ],
       permissions: { ...basePermissions, canSell: true, canViewEarnings: true },
       actionPanel: {

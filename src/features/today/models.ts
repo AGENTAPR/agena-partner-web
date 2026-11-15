@@ -88,6 +88,8 @@ export interface BusinessInsight {
   labelKey: string;
   valueKey: string;
   to?: string;
+  /** NextureIcon component name for the stat tile. */
+  iconKey?: string;
 }
 
 /** Today-scoped contextual action — a mock interaction completed inside Today. */

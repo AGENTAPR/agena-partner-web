@@ -33,8 +33,11 @@ import {
 
 import NiCheckFull from "@/icons/nexture/ni-check-full";
 import NiClock from "@/icons/nexture/ni-clock";
+import NiCalendar from "@/icons/nexture/ni-calendar";
+import NiDocumentFull from "@/icons/nexture/ni-document-full";
 import NiFlag from "@/icons/nexture/ni-flag";
 import NiShield from "@/icons/nexture/ni-shield";
+import NiShieldCheck from "@/icons/nexture/ni-shield-check";
 import NiUser from "@/icons/nexture/ni-user";
 
 const service: TodayExperienceService = createTodayService();
@@ -236,6 +239,12 @@ function useTodayData() {
     reload: load,
   };
 }
+
+const INSIGHT_ICONS: Record<string, typeof NiCalendar> = {
+  NiDocumentFull,
+  NiCalendar,
+  NiShieldCheck,
+};
 
 const SEVERITY_COLOR = { CRITICAL: "error", WARNING: "warning", INFO: "info" } as const;
 
@@ -625,31 +634,51 @@ export function TodayExperience() {
             ) : null}
 
             {vm.showInsights && vm.insights.length > 0 ? (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card className="h-full">
-                  <CardContent>
-                    <Typography variant="h6" className="mb-2">
-                      {t("today-insights-title")}
-                    </Typography>
-                    <Grid container spacing={2}>
-                      {vm.insights.map((i) => (
-                        <Grid key={i.id} size={4}>
-                          {i.to ? (
-                            <Button component={Link} to={i.to} className="h-auto! w-full! flex-col!">
-                              <Typography variant="h5">{i.valueKey}</Typography>
-                              <Typography variant="caption">{t(i.labelKey)}</Typography>
-                            </Button>
-                          ) : (
-                            <Box className="text-center">
-                              <Typography variant="h5">{i.valueKey}</Typography>
-                              <Typography variant="caption">{t(i.labelKey)}</Typography>
-                            </Box>
-                          )}
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </CardContent>
-                </Card>
+              <Grid size={12}>
+                <Typography variant="h6" component="h6" className="mb-3">
+                  {t("today-insights-title")}
+                </Typography>
+                <Grid container spacing={2.5}>
+                  {vm.insights.map((i, idx) => {
+                    const Icon = i.iconKey ? INSIGHT_ICONS[i.iconKey] : undefined;
+                    const tile = (
+                      <>
+                        <Box
+                          className={`flex h-28 w-full flex-none items-center justify-center rounded-2xl ${
+                            idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
+                          }`}
+                        >
+                          {Icon ? (
+                            <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="large" />
+                          ) : null}
+                        </Box>
+                        <CardContent className="text-center">
+                          <Typography variant="body1" className="text-text-secondary leading-5">
+                            {t(i.labelKey)}
+                          </Typography>
+                          <Typography variant="h5" className="leading-5">
+                            {i.valueKey}
+                          </Typography>
+                        </CardContent>
+                      </>
+                    );
+                    return (
+                      <Grid key={i.id} size={{ xs: 6, sm: 3 }}>
+                        {i.to ? (
+                          <Card
+                            component={Link}
+                            to={i.to}
+                            className="flex flex-col p-1 transition-transform hover:scale-[1.02]"
+                          >
+                            {tile}
+                          </Card>
+                        ) : (
+                          <Card className="flex flex-col p-1">{tile}</Card>
+                        )}
+                      </Grid>
+                    );
+                  })}
+                </Grid>
               </Grid>
             ) : null}
 
