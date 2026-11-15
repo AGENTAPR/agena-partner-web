@@ -1,6 +1,6 @@
 import MuiLayerOverride from "./mui-layer-override";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { useLocalStorage } from "react-use";
+import Cookies from "js-cookie";
 
 import { createTheme, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 
@@ -244,13 +244,40 @@ export const createMuiTheme = (direction: "ltr" | "rtl" = "ltr") =>
 
 export const muiTheme = createMuiTheme();
 
-export default function ThemeProvider({ children }: { children: ReactNode }) {
-  const [storedTheme, setTheme] = useLocalStorage<ThemeVariant>(LS_KEYS.themeColor, DEFAULTS.themeColor);
+export interface InitialThemePrefs {
+  theme?: ThemeVariant;
+  mode?: ModeVariant;
+  content?: ContentType;
+}
+
+function readClientPref<T extends string>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw) return raw as T;
+  } catch {
+    /* ignore */
+  }
+  return fallback;
+}
+
+export default function ThemeProvider({
+  children,
+  initialPrefs,
+}: {
+  children: ReactNode;
+  initialPrefs?: InitialThemePrefs;
+}) {
+  const [storedTheme, setTheme] = useState<ThemeVariant>(
+    () => readClientPref(LS_KEYS.themeColor, initialPrefs?.theme ?? DEFAULTS.themeColor) as ThemeVariant,
+  );
   const theme =
     storedTheme && (Object.values(THEME_OPTIONS) as string[]).includes(storedTheme)
       ? storedTheme
       : DEFAULTS.themeColor;
-  const [mode, setMode] = useLocalStorage<ModeVariant>(LS_KEYS.themeMode, DEFAULTS.themeMode);
+  const [mode, setMode] = useState<ModeVariant>(
+    () => readClientPref(LS_KEYS.themeMode, initialPrefs?.mode ?? DEFAULTS.themeMode) as ModeVariant,
+  );
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   // Determine direction based on language
@@ -273,6 +300,15 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
       (x) => x !== theme && x !== finalMode,
     );
     classList.remove(...removeList);
+
+    // Mirror prefs to cookies so SSR can render the same initial theme
+    try {
+      Cookies.set(LS_KEYS.themeColor, theme, { sameSite: "lax" });
+      Cookies.set(LS_KEYS.themeMode, mode ?? DEFAULTS.themeMode, { sameSite: "lax" });
+      Cookies.set("-theme-mode-effective", finalMode, { sameSite: "lax" });
+    } catch {
+      /* ignore */
+    }
   }, [theme, mode]);
 
   // Set document direction and dir attribute
@@ -280,7 +316,20 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute("dir", direction);
   }, [direction]);
 
-  const [content, setContent] = useLocalStorage<ContentType>(LS_KEYS.contentType, DEFAULTS.contentType);
+  const [content, setContent] = useState<ContentType>(
+    () => readClientPref(LS_KEYS.contentType, initialPrefs?.content ?? DEFAULTS.contentType) as ContentType,
+  );
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_KEYS.themeColor, theme);
+      window.localStorage.setItem(LS_KEYS.themeMode, mode ?? DEFAULTS.themeMode);
+      window.localStorage.setItem(LS_KEYS.contentType, content);
+      Cookies.set(LS_KEYS.contentType, content, { sameSite: "lax" });
+    } catch {
+      /* ignore */
+    }
+  }, [theme, mode, content]);
 
   useEffect(() => {
     setTimeout(

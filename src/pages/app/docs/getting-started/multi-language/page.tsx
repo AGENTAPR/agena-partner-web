@@ -131,9 +131,7 @@ export default function ActionTranslation() {
                   codeTagProps={{ className: "border-none" }}
                   showLineNumbers
                 >
-                  {`import { useTranslation } from "react-i18next";
-
-import { Button } from "@mui/material";
+                  {`import { Button } from "@mui/material";
 
 import { LocaleOption } from "@/constants";
 import { setClientLocale } from "@/i18n/locale";

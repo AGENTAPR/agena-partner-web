@@ -21,11 +21,12 @@ export default function UserLanguageSwitch() {
 
   const {
     t,
-    i18n: { language: locale },
+    i18n,
   } = useTranslation();
+  const locale = i18n.language as LocaleOption;
 
   const handleOnChangeLocale = (value: LocaleOption) => {
-    setClientLocale(value);
+    setClientLocale(value, i18n);
   };
 
   return (

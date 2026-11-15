@@ -1,11 +1,20 @@
 {
-  "main": "./worker/cloudflare-worker.ts",
-  "name": "averuna-vite-mui-admin",
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "averuna-partner-web",
   "compatibility_date": "2025-06-20",
+  "main": "./worker/cloudflare-worker.ts",
+  "vars": {
+    // Non-secret configuration only. Secrets (AGENT_BFF_INTERNAL_TOKEN,
+    // SESSION_SECRET) must be set via `wrangler secret put`.
+    "AGENT_BFF_TIMEOUT_MS": "10000"
+  },
+  // AGENT_BFF_BASE_URL, AGENT_BFF_INTERNAL_TOKEN and SESSION_SECRET are
+  // server-only bindings configured as Worker secrets/vars — never VITE_*.
   "assets": {
-    "not_found_handling": "single-page-application",
+    "directory": "./build/client",
+    "binding": "ASSETS"
   },
   "observability": {
-    "enabled": true,
-  },
+    "enabled": true
+  }
 }
