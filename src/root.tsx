@@ -1,4 +1,4 @@
-import { Links, type LoaderFunctionArgs, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "react-router";
+import { Links, type LoaderFunctionArgs, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, redirect } from "react-router";
 
 import { DEFAULTS } from "@/config";
 import {
@@ -30,6 +30,12 @@ function readCookie(cookieHeader: string | null, name: string): string | undefin
 }
 
 export function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  // Server-side redirect for the app entry point — works without client JS.
+  if (url.pathname === "/") {
+    throw redirect("/today");
+  }
+
   const cookieHeader = request.headers.get("Cookie");
 
   const locale = getRequestLocale(cookieHeader);
