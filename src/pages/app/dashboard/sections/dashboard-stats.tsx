@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import NiDocumentCheck from "@/icons/nexture/ni-document-check";
 import NiDocumentFull from "@/icons/nexture/ni-document-full";
+import NiKnobs from "@/icons/nexture/ni-knobs";
 import NiMoney from "@/icons/nexture/ni-money";
 import NiMoon from "@/icons/nexture/ni-moon";
 import NiScreen from "@/icons/nexture/ni-screen";
@@ -121,19 +122,22 @@ function ConfigurationCard() {
   const { mode, setMode } = useThemeContext();
   return (
     <Card className="h-full">
-      <CardContent className="flex h-full flex-col gap-3">
-        <Typography variant="h6" component="h6">
-          {t("dashboard-configuration")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+      <CardContent className="flex h-full flex-col gap-4 p-6">
+        <Box className="flex flex-row items-center gap-2">
+          <NiKnobs className="text-primary" size="large" />
+          <Typography variant="h5" component="h6">
+            {t("dashboard-configuration")}
+          </Typography>
+        </Box>
+        <Typography variant="body1" color="text.secondary">
           {t("dashboard-configuration-desc")}
         </Typography>
-        <Box className="mt-auto flex flex-col gap-1">
+        <Box className="mt-auto flex flex-col gap-2">
           {MODE_OPTIONS.map((opt) => (
             <Button
               key={opt.value}
-              size="small"
-              variant={mode === opt.value ? "contained" : "text"}
+              size="medium"
+              variant={mode === opt.value ? "contained" : "outlined"}
               color={mode === opt.value ? "primary" : "grey"}
               startIcon={opt.icon}
               onClick={() => setMode(opt.value)}
