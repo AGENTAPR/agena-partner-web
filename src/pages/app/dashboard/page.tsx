@@ -1,8 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-import { TodayExperience } from "@/features/today/components/today-experience";
-
 function greetingPeriod(hour: number): "morning" | "afternoon" | "evening" | "night" {
   if (hour < 11) return "morning";
   if (hour < 15) return "afternoon";
@@ -34,7 +32,6 @@ export default function DashboardPage() {
           {t("dashboard-tagline")}
         </Typography>
       </Box>
-      <TodayExperience />
     </Box>
   );
 }
