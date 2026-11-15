@@ -149,26 +149,20 @@ function ConfigurationCard() {
 }
 
 export default function DashboardStats() {
-  const { t } = useTranslation();
   return (
-    <>
-      <Typography variant="h6" component="h6" className="mb-3">
-        {t("dashboard-todays-stats")}
-      </Typography>
-      <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12, lg: 10 }}>
-          <Grid container spacing={2.5}>
-            {STATS.map((stat) => (
-              <Grid key={stat.labelKey} size={{ xs: 12, sm: 6, lg: 2 }}>
-                <StatCard stat={stat} />
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 2 }}>
-          <ConfigurationCard />
+    <Grid container spacing={2.5}>
+      <Grid size={{ xs: 12, lg: 10 }}>
+        <Grid container spacing={2.5}>
+          {STATS.map((stat) => (
+            <Grid key={stat.labelKey} size={{ xs: 12, sm: 6, lg: 2 }}>
+              <StatCard stat={stat} />
+            </Grid>
+          ))}
         </Grid>
       </Grid>
-    </>
+      <Grid size={{ xs: 12, lg: 2 }}>
+        <ConfigurationCard />
+      </Grid>
+    </Grid>
   );
 }
