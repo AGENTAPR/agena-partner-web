@@ -644,38 +644,38 @@ export function TodayExperience() {
                       {vm.insights.map((i, idx) => {
                         const Icon = i.iconKey ? INSIGHT_ICONS[i.iconKey] : undefined;
                         const content = (
-                          <Box className="flex items-center gap-3">
-                            <Box
-                              className={`flex h-14 w-14 flex-none items-center justify-center rounded-xl ${
-                                idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
-                              }`}
-                            >
-                              {Icon ? (
-                                <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="medium" />
-                              ) : null}
-                            </Box>
-                            <Box className="min-w-0">
-                              <Typography variant="h5" className="leading-5">
+                          <Box className="flex flex-col gap-2 p-1">
+                            <Box className="flex items-center gap-3">
+                              <Box
+                                className={`flex h-12 w-12 flex-none items-center justify-center rounded-xl ${
+                                  idx % 2 === 0 ? "bg-primary-light/10" : "bg-secondary-light/10"
+                                }`}
+                              >
+                                {Icon ? (
+                                  <Icon className={idx % 2 === 0 ? "text-primary" : "text-secondary"} size="medium" />
+                                ) : null}
+                              </Box>
+                              <Typography variant="h6" className="leading-5">
                                 {i.valueKey}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary" className="leading-4">
-                                {t(i.labelKey)}
-                              </Typography>
                             </Box>
+                            <Typography variant="caption" color="text.secondary" className="leading-4">
+                              {t(i.labelKey)}
+                            </Typography>
                           </Box>
                         );
                         return (
-                          <Grid key={i.id} size={12}>
+                          <Grid key={i.id} size={{ xs: 12, sm: 4 }}>
                             {i.to ? (
                               <Card
                                 component={Link}
                                 to={i.to}
-                                className="flex p-2 transition-transform hover:scale-[1.02]"
+                                className="h-full p-2 transition-transform hover:scale-[1.02]"
                               >
                                 {content}
                               </Card>
                             ) : (
-                              <Card className="flex p-2">{content}</Card>
+                              <Card className="h-full p-2">{content}</Card>
                             )}
                           </Grid>
                         );
