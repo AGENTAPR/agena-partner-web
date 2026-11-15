@@ -19,10 +19,7 @@ export default function UserLanguageSwitch() {
     setAnchorElLang(null);
   };
 
-  const {
-    t,
-    i18n,
-  } = useTranslation();
+  const { t, i18n } = useTranslation();
   const locale = i18n.language as LocaleOption;
 
   const handleOnChangeLocale = (value: LocaleOption) => {

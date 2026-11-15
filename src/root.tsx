@@ -1,4 +1,13 @@
-import { Links, type LoaderFunctionArgs, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, redirect } from "react-router";
+import {
+  Links,
+  type LoaderFunctionArgs,
+  Meta,
+  Outlet,
+  redirect,
+  Scripts,
+  ScrollRestoration,
+  useLoaderData,
+} from "react-router";
 
 import { DEFAULTS } from "@/config";
 import {
@@ -9,7 +18,9 @@ import {
   THEME_OPTIONS,
   type ThemeVariant,
 } from "@/constants";
+import type { PartnerContext } from "@/features/auth/types";
 import { getRequestLocale } from "@/i18n/locale";
+import { authGate, getAuthMode, isPublicPath } from "@/server/auth.server";
 import { ContentType } from "@/types/types";
 
 export interface RootLoaderData {
@@ -18,6 +29,10 @@ export interface RootLoaderData {
   mode: ModeVariant;
   effectiveMode: "light" | "dark";
   content: ContentType;
+  authMode: "mock" | "live";
+  authenticated: boolean;
+  partner: PartnerContext | null;
+  partnerError: "UNAVAILABLE" | "FORBIDDEN" | null;
 }
 
 function readCookie(cookieHeader: string | null, name: string): string | undefined {
@@ -29,7 +44,7 @@ function readCookie(cookieHeader: string | null, name: string): string | undefin
   return undefined;
 }
 
-export function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   // Server-side redirect for the app entry point — works without client JS.
   if (url.pathname === "/") {
@@ -59,7 +74,43 @@ export function loader({ request }: LoaderFunctionArgs) {
     ? (contentRaw as ContentType)
     : DEFAULTS.contentType;
 
-  return { locale, theme, mode, effectiveMode, content } satisfies RootLoaderData;
+  // Server-side auth gate — private routes require a session.
+  // Anonymous users are redirected to sign-in with a safe return target.
+  const pathname = url.pathname;
+  const search = url.search;
+  let authMode: "mock" | "live" = getAuthMode(context);
+  let authenticated = false;
+  let partner: PartnerContext | null = null;
+  let partnerError: "UNAVAILABLE" | "FORBIDDEN" | null = null;
+
+  if (!isPublicPath(pathname)) {
+    const gate = await authGate(request, context);
+    authenticated = gate.session !== null;
+    partner = gate.partner;
+    partnerError = gate.partnerError;
+    if (!authenticated) {
+      const returnTo = encodeURIComponent(`${pathname}${search}`);
+      throw redirect(`/auth/sign-in?redirectTo=${returnTo}`);
+    }
+  } else {
+    authMode = getAuthMode(context);
+    const gate = await authGate(request, context);
+    authenticated = gate.session !== null;
+    partner = gate.partner;
+    partnerError = gate.partnerError;
+  }
+
+  return {
+    locale,
+    theme,
+    mode,
+    effectiveMode,
+    content,
+    authMode,
+    authenticated,
+    partner,
+    partnerError,
+  } satisfies RootLoaderData;
 }
 
 export function meta() {

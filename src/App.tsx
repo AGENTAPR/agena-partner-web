@@ -9,6 +9,7 @@ import BackgroundWrapper from "@/components/layout/containers/background-wrapper
 import SnackbarWrapper from "@/components/layout/containers/snackbar-wrapper";
 import LayoutContextProvider from "@/components/layout/layout-context";
 import { DEFAULTS } from "@/config";
+import { AuthProvider } from "@/features/auth/auth-context";
 import { createI18n } from "@/i18n/i18n";
 import Loading from "@/pages/loading";
 import type { RootLoaderData } from "@/root";
@@ -21,9 +22,21 @@ const App = () => {
   // Per-request i18next instance so SSR renders the request locale
   const i18n = useMemo(() => createI18n(locale), [locale]);
 
+  const authValue = {
+    mode: rootData?.authMode ?? ("mock" as const),
+    state: rootData?.authenticated
+      ? rootData.partnerError
+        ? rootData.partnerError
+        : ("AUTHENTICATED" as const)
+      : ("ANONYMOUS" as const),
+    partner: rootData?.partner ?? null,
+  };
+
   return (
     <I18nextProvider i18n={i18n}>
-      <AppContent initialPrefs={rootData} />
+      <AuthProvider value={authValue}>
+        <AppContent initialPrefs={rootData} />
+      </AuthProvider>
     </I18nextProvider>
   );
 };

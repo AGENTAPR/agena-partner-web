@@ -6,13 +6,19 @@ export interface AgentBffEnv {
   AGENT_BFF_INTERNAL_TOKEN?: string;
   AGENT_BFF_TIMEOUT_MS?: string;
   SESSION_SECRET?: string;
+  /** "mock" | "live" — explicit auth mode. Unset → mock in dev, live in production. */
+  AUTH_MODE?: string;
 }
 
 function getCloudflareEnv(context: AppLoadContext): AgentBffEnv | undefined {
   const provider = context as { get?: (key: unknown) => unknown };
   if (typeof provider.get === "function") {
-    const value = provider.get(cloudflareContext) as { env?: AgentBffEnv } | undefined;
-    return value?.env;
+    try {
+      const value = provider.get(cloudflareContext) as { env?: AgentBffEnv } | undefined;
+      if (value?.env) return value.env;
+    } catch {
+      // Context key not registered in this bundle — fall through to direct shape.
+    }
   }
   const direct = (context as { cloudflare?: { env?: AgentBffEnv } }).cloudflare;
   return direct?.env;

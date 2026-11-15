@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "averuna-partner-web",
   "compatibility_date": "2025-06-20",
+  // Required: SSR bundle uses @emotion/server -> node `stream` polyfill.
+  "compatibility_flags": ["nodejs_compat"],
   "main": "./worker/cloudflare-worker.ts",
   "vars": {
     // Non-secret configuration only. Secrets (AGENT_BFF_INTERNAL_TOKEN,
