@@ -45,12 +45,14 @@ const service: TodayExperienceService = createTodayService();
 
 function useTodayData() {
   const [params] = useSearchParams();
-  const { partner, mode } = useAuth();
-  const identityScenario = partner?.scenarioId ?? "active-eligible";
-  // Mock mode: scenario/variant query params are a dev-only override.
-  // Live mode: scenario comes from the authenticated partner context only.
-  const scenarioId = mode === "live" ? identityScenario : (params.get("scenario") ?? identityScenario);
-  const variant = (mode === "live" ? "normal" : (params.get("variant") ?? "normal")) as TodayVariant;
+  const { partner } = useAuth();
+  const isDev = import.meta.env.DEV;
+  // Scenario comes from the authenticated partner context. In dev builds
+  // only, ?scenario=/?variant= may select a business-fixture scenario for
+  // UI development — production builds ignore them entirely.
+  const identityScenario = partner?.scenarioId ?? "unaffiliated";
+  const scenarioId = isDev ? (params.get("scenario") ?? identityScenario) : identityScenario;
+  const variant = (isDev ? (params.get("variant") ?? "normal") : "normal") as TodayVariant;
   const actorId = partner?.subject ?? "anonymous";
 
   const context = useMemo<RequestContext>(
@@ -104,6 +106,16 @@ function useTodayData() {
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
+    // Unlinked account (no agent domain record) — honest empty state,
+    // never fabricated journey/KPI content.
+    if (scenarioId === "unaffiliated") {
+      setLoading(false);
+      setView(null);
+      setErrorCode(undefined);
+      return () => {
+        cancelled = true;
+      };
+    }
     setLoading(true);
     setErrorCode(undefined);
     service
@@ -123,7 +135,7 @@ function useTodayData() {
     return () => {
       cancelled = true;
     };
-  }, [context]);
+  }, [context, scenarioId]);
 
   // Timer + mounted cleanup
   useEffect(() => {
@@ -243,6 +255,7 @@ function useTodayData() {
     panelBusy,
     runPanelAction,
     reload: load,
+    scenarioId,
   };
 }
 
@@ -402,10 +415,11 @@ export function TodayExperience() {
     panelBusy,
     runPanelAction,
     reload,
+    scenarioId,
   } = useTodayData();
   const vm = toTodayViewModel(view, loading, errorCode);
   const isDev = import.meta.env.DEV;
-  const { mode } = useAuth();
+  const unaffiliated = scenarioId === "unaffiliated";
 
   const nba = vm.nextBestAction;
   // Hero derives entirely from the NBA model — never mixes sources.
@@ -441,7 +455,7 @@ export function TodayExperience() {
 
   return (
     <Box className="flex flex-col gap-10">
-      {isDev && mode === "mock" ? <ScenarioSwitcher /> : null}
+      {isDev ? <ScenarioSwitcher /> : null}
 
       <div aria-live="polite" className="sr-only">
         {actionNotice ? t(actionNotice) : ""}
@@ -470,7 +484,21 @@ export function TodayExperience() {
         ) : null}
       </Box>
 
-      {vm.state === "LOADING" ? (
+      {unaffiliated ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+            <NiUser size={40} className="text-text-secondary" />
+            <Typography variant="h5" component="h2" className="font-bold">
+              {t("today-unaffiliated-title")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" className="max-w-lg">
+              {t("today-unaffiliated-body")}
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {vm.state === "LOADING" && !unaffiliated ? (
         <Card>
           <CardContent className="flex flex-col gap-3">
             <Skeleton variant="text" width="40%" height={40} />
@@ -481,7 +509,7 @@ export function TodayExperience() {
         </Card>
       ) : null}
 
-      {vm.state === "PERMISSION_DENIED" ? (
+      {!unaffiliated && vm.state === "PERMISSION_DENIED" ? (
         <StatePanel
           icon={<NiShield size={40} />}
           titleKey="today-state-forbidden-title"
@@ -490,7 +518,7 @@ export function TodayExperience() {
           onAction={() => void reload()}
         />
       ) : null}
-      {vm.state === "DEPENDENCY_UNAVAILABLE" ? (
+      {!unaffiliated && vm.state === "DEPENDENCY_UNAVAILABLE" ? (
         <StatePanel
           icon={<NiClock size={40} />}
           titleKey="today-state-unavailable-title"
@@ -499,7 +527,7 @@ export function TodayExperience() {
           onAction={() => void reload()}
         />
       ) : null}
-      {vm.state === "VERSION_CONFLICT" ? (
+      {!unaffiliated && vm.state === "VERSION_CONFLICT" ? (
         <StatePanel
           icon={<NiClock size={40} />}
           titleKey="today-state-conflict-title"
@@ -508,11 +536,12 @@ export function TodayExperience() {
           onAction={() => void reload()}
         />
       ) : null}
-      {vm.state === "EMPTY" ? (
+      {!unaffiliated && vm.state === "EMPTY" ? (
         <StatePanel icon={<NiCheckFull size={40} />} titleKey="today-state-empty-title" bodyKey="today-empty" />
       ) : null}
 
       {view &&
+      !unaffiliated &&
       !["LOADING", "PERMISSION_DENIED", "DEPENDENCY_UNAVAILABLE", "VERSION_CONFLICT", "EMPTY"].includes(vm.state) ? (
         <>
           {vm.criticalBlockers.map((b) => (

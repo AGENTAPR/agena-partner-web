@@ -6,7 +6,6 @@ export interface CloudflareWorkerContext {
     AGENT_BFF_INTERNAL_TOKEN?: string;
     AGENT_BFF_TIMEOUT_MS?: string;
     SESSION_SECRET?: string;
-    AUTH_MODE?: string;
   };
   ctx: unknown;
 }

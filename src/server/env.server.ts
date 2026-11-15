@@ -6,8 +6,6 @@ export interface AgentBffEnv {
   AGENT_BFF_INTERNAL_TOKEN?: string;
   AGENT_BFF_TIMEOUT_MS?: string;
   SESSION_SECRET?: string;
-  /** "mock" | "live" — explicit auth mode. Unset → mock in dev, live in production. */
-  AUTH_MODE?: string;
 }
 
 function getCloudflareEnv(context: AppLoadContext): AgentBffEnv | undefined {
@@ -21,7 +19,19 @@ function getCloudflareEnv(context: AppLoadContext): AgentBffEnv | undefined {
     }
   }
   const direct = (context as { cloudflare?: { env?: AgentBffEnv } }).cloudflare;
-  return direct?.env;
+  if (direct?.env) return direct.env;
+  // Local `react-router dev` has no Cloudflare bindings — fall back to
+  // process.env so .env can supply AGENT_BFF_BASE_URL for development.
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+  if (proc?.AGENT_BFF_BASE_URL) {
+    return {
+      AGENT_BFF_BASE_URL: proc.AGENT_BFF_BASE_URL,
+      AGENT_BFF_INTERNAL_TOKEN: proc.AGENT_BFF_INTERNAL_TOKEN,
+      AGENT_BFF_TIMEOUT_MS: proc.AGENT_BFF_TIMEOUT_MS,
+      SESSION_SECRET: proc.SESSION_SECRET,
+    };
+  }
+  return undefined;
 }
 
 export function getBffConfig(context: AppLoadContext): {

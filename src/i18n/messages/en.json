@@ -764,5 +764,7 @@
   "auth-mock-identity-agent-ineligible": "Active ineligible agent",
   "auth-mock-identity-agent-suspended": "Suspended agent",
   "auth-mock-identity-agent-offboarding": "Agent offboarding",
-  "auth-mock-identity-agency-leader": "Agency leader"
+  "auth-mock-identity-agency-leader": "Agency leader",
+  "today-unaffiliated-title": "Your account is not linked to an agent profile yet",
+  "today-unaffiliated-body": "You are signed in, but this account is not associated with an agent record. If you believe this is a mistake, contact your agency administrator or Averuna support."
 }

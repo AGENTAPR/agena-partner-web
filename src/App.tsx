@@ -23,7 +23,6 @@ const App = () => {
   const i18n = useMemo(() => createI18n(locale), [locale]);
 
   const authValue = {
-    mode: rootData?.authMode ?? ("mock" as const),
     state: rootData?.authenticated
       ? rootData.partnerError
         ? rootData.partnerError

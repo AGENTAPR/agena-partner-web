@@ -65,7 +65,7 @@ export default function User() {
           <Box>{displayName ?? t("user-signed-in")}</Box>
           <Avatar
             alt={displayName ?? "avatar"}
-            src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
+            src={undefined}
             className={cn(
               "large transition-all group-hover:ms-0.5 group-hover:h-8 group-hover:w-8",
               open && "ms-0.5 h-8! w-8!",
@@ -89,7 +89,7 @@ export default function User() {
           startIcon={
             <Avatar
               alt={displayName ?? "avatar"}
-              src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
+              src={undefined}
               className={cn("large transition-all group-hover:h-7 group-hover:w-7", open && "h-7! w-7!")}
             >
               {initials}
@@ -115,18 +115,14 @@ export default function User() {
                   <CardContent>
                     <Box className="max-w-64 sm:w-72 sm:max-w-none">
                       <Box className="mb-4 flex flex-col items-center">
-                        <Avatar
-                          alt={displayName ?? "avatar"}
-                          src={initials ? undefined : "/images/avatars/avatar-3.jpg"}
-                          className="large mb-2"
-                        >
+                        <Avatar alt={displayName ?? "avatar"} src={undefined} className="large mb-2">
                           {initials}
                         </Avatar>
                         <Typography variant="subtitle1" component="p">
                           {displayName ?? t("user-signed-in")}
                         </Typography>
                         <Typography variant="body2" component="p" className="text-text-secondary -mt-2">
-                          {partner?.email ?? partner?.workspace ?? t("user-signed-in-description")}
+                          {partner?.agentCode ?? partner?.workspace ?? t("user-signed-in-description")}
                         </Typography>
                       </Box>
 
