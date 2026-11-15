@@ -150,7 +150,7 @@ function ConfigurationPanel() {
 
 export default function DashboardStats() {
   return (
-    <Box className="flex flex-col gap-2.5 lg:flex-row">
+    <Box className="flex flex-col gap-5 lg:flex-row">
       {STATS.map((stat) => (
         <Box key={stat.labelKey} className="min-w-0 flex-1">
           <StatCard stat={stat} />

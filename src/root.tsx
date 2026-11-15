@@ -76,10 +76,12 @@ export default function App() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon/purple-dark.png" media="(prefers-color-scheme: dark)" />
+        <link rel="icon" href="/favicon/purple-light.png" media="(prefers-color-scheme: light)" />
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="antialiased">
         <Outlet />
         <ScrollRestoration />
         <Scripts />

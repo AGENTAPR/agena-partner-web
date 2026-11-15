@@ -433,7 +433,7 @@ export function TodayExperience() {
   };
 
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className="flex flex-col gap-10">
       {isDev ? <ScenarioSwitcher /> : null}
 
       <div aria-live="polite" className="sr-only">
@@ -563,7 +563,7 @@ export function TodayExperience() {
             </CardContent>
           </Card>
 
-          <Grid container spacing={3}>
+          <Grid container spacing={2.5}>
             {vm.journey.length > 0 ? (
               <Grid size={{ xs: 12, lg: 5 }}>
                 <Card className="h-full">
