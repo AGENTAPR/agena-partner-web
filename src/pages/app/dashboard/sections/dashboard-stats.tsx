@@ -122,7 +122,7 @@ function ConfigurationPanel() {
   const { t } = useTranslation();
   const { mode, setMode } = useThemeContext();
   return (
-    <Box className="from-primary-light/15 to-secondary-light/15 bg-gradient-to-br shadow-xs flex h-full w-full flex-none flex-col justify-center gap-3 rounded-3xl px-4 py-4 lg:rounded-l-none!">
+    <Box className="from-primary-light/15 to-secondary-light/15 bg-gradient-to-br shadow-xs flex h-full w-full flex-none flex-col justify-center gap-3 rounded-3xl px-4 py-4">
       <Box className="flex flex-row items-center gap-2">
         <NiKnobs className="text-primary" size="medium" />
         <Typography variant="subtitle2" component="h6" className="font-bold">
@@ -151,15 +151,12 @@ function ConfigurationPanel() {
 export default function DashboardStats() {
   return (
     <Box className="flex flex-col gap-2.5 lg:flex-row">
-      {STATS.map((stat, index) => {
-        const isLast = index === STATS.length - 1;
-        return (
-          <Box key={stat.labelKey} className="min-w-0 flex-1">
-            <StatCard stat={stat} className={isLast ? "lg:rounded-r-none!" : undefined} />
-          </Box>
-        );
-      })}
-      <Box className="flex min-w-0 flex-[2] lg:-ml-2.5">
+      {STATS.map((stat) => (
+        <Box key={stat.labelKey} className="min-w-0 flex-1">
+          <StatCard stat={stat} />
+        </Box>
+      ))}
+      <Box className="flex min-w-0 flex-[2]">
         <ConfigurationPanel />
       </Box>
     </Box>
