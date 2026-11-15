@@ -83,17 +83,17 @@ function StatCard({ stat, className }: { stat: StatItem; className?: string }) {
         <Box className={stat.iconClass}>{stat.icon}</Box>
       </Box>
       <CardContent className="flex min-h-28 min-w-0 flex-col justify-center gap-1">
-        <Typography variant="body2" className="text-text-secondary leading-5">
+        <Typography variant="caption" className="text-text-secondary leading-4">
           {t(stat.labelKey)}
         </Typography>
-        <Typography variant="h5" className="text-leading-5">
+        <Typography variant="h6" className="text-leading-5">
           {stat.value}
         </Typography>
         <Box className="flex flex-row items-center gap-1">
           {stat.change ? (
             <>
               <NiTriangleUp className="text-success" size="small" />
-              <Typography variant="body2" className="text-success">
+              <Typography variant="caption" className="text-success">
                 {stat.change}
               </Typography>
             </>
