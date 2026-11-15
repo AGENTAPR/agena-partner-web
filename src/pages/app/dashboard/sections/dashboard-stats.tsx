@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { Box, Button, Card, CardContent, Grid, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 import NiDocumentCheck from "@/icons/nexture/ni-document-check";
@@ -129,7 +129,7 @@ function ConfigurationPanel() {
           {t("dashboard-configuration")}
         </Typography>
       </Box>
-      <Box className="flex flex-col gap-1">
+      <Box className="flex flex-1 flex-row gap-1">
         {MODE_OPTIONS.map((opt) => (
           <Button
             key={opt.value}
@@ -138,7 +138,7 @@ function ConfigurationPanel() {
             color={mode === opt.value ? "primary" : "grey"}
             startIcon={opt.icon}
             onClick={() => setMode(opt.value)}
-            className="justify-start"
+            className="flex-1 justify-center"
           >
             {t(opt.labelKey)}
           </Button>
@@ -150,18 +150,18 @@ function ConfigurationPanel() {
 
 export default function DashboardStats() {
   return (
-    <Grid container spacing={2.5}>
+    <Box className="flex flex-col gap-2.5 lg:flex-row">
       {STATS.map((stat, index) => {
         const isLast = index === STATS.length - 1;
         return (
-          <Grid key={stat.labelKey} size={{ xs: 12, sm: 6, lg: 2 }}>
+          <Box key={stat.labelKey} className="min-w-0 flex-1">
             <StatCard stat={stat} className={isLast ? "lg:rounded-r-none!" : undefined} />
-          </Grid>
+          </Box>
         );
       })}
-      <Grid size={{ xs: 12, sm: 6, lg: 2 }} sx={{ lg: { ml: "-20px" } }}>
+      <Box className="flex min-w-0 flex-[2] lg:-ml-2.5">
         <ConfigurationPanel />
-      </Grid>
-    </Grid>
+      </Box>
+    </Box>
   );
 }
