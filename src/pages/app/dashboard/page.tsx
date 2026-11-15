@@ -1,4 +1,6 @@
 import { Box, Typography } from "@mui/material";
+
+import DashboardStats from "./sections/dashboard-stats";
 import { useTranslation } from "react-i18next";
 
 function greetingPeriod(hour: number): "morning" | "afternoon" | "evening" | "night" {
@@ -32,6 +34,7 @@ export default function DashboardPage() {
           {t("dashboard-tagline")}
         </Typography>
       </Box>
+      <DashboardStats />
     </Box>
   );
 }

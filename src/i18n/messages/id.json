@@ -736,5 +736,13 @@
   "dashboard-greeting-afternoon": "Selamat siang, {{name}}",
   "dashboard-greeting-evening": "Selamat sore, {{name}}",
   "dashboard-greeting-night": "Selamat malam, {{name}}",
-  "dashboard-tagline": "Bantu lebih banyak keluarga merencanakan masa depan yang aman."
+  "dashboard-tagline": "Bantu lebih banyak keluarga merencanakan masa depan yang aman.",
+  "dashboard-todays-stats": "Statistik Hari Ini",
+  "dashboard-configuration": "Konfigurasi",
+  "dashboard-configuration-desc": "Personalisasi ruang kerja Anda.",
+  "dashboard-stat-active-customers": "Nasabah Aktif",
+  "dashboard-stat-proposals": "Proposal",
+  "dashboard-stat-active-policies": "Polis Aktif",
+  "dashboard-stat-running-claims": "Klaim Berjalan",
+  "dashboard-stat-commission-month": "Komisi Bulan Ini"
 }

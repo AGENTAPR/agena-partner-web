@@ -736,5 +736,13 @@
   "dashboard-greeting-afternoon": "Good afternoon, {{name}}",
   "dashboard-greeting-evening": "Good evening, {{name}}",
   "dashboard-greeting-night": "Good night, {{name}}",
-  "dashboard-tagline": "Help more families plan a safe future."
+  "dashboard-tagline": "Help more families plan a safe future.",
+  "dashboard-todays-stats": "Today's Stats",
+  "dashboard-configuration": "Configuration",
+  "dashboard-configuration-desc": "Personalize your workspace.",
+  "dashboard-stat-active-customers": "Active Customers",
+  "dashboard-stat-proposals": "Proposals",
+  "dashboard-stat-active-policies": "Active Policies",
+  "dashboard-stat-running-claims": "Running Claims",
+  "dashboard-stat-commission-month": "Commission This Month"
 }
