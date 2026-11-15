@@ -34,6 +34,9 @@ const detailPage = (titleKey: string) => <DetailPage titleKey={titleKey} />;
  */
 const appRoutes: { path: string; element: React.ReactElement }[] = [
   { path: "/today", element: lazyPage("./pages/app/today/page.tsx") },
+  { path: "/sales", element: modulePage("menu-sales") },
+  { path: "/portfolio", element: modulePage("menu-portfolio") },
+  { path: "/development", element: <Navigate to="/development/overview" replace /> },
 
   // Prospects & Customers
   { path: "/prospects", element: modulePage("menu-my-prospects") },
@@ -48,7 +51,7 @@ const appRoutes: { path: string; element: React.ReactElement }[] = [
   { path: "/customers/:id/interactions", element: detailPage("menu-customer-interactions") },
 
   // Sales
-  { path: "/sales/products", element: modulePage("menu-products") },
+  { path: "/sales/products", element: modulePage("menu-product-catalogue") },
   { path: "/sales/products/:id", element: detailPage("menu-product-detail") },
   { path: "/sales/illustrations", element: modulePage("menu-illustrations") },
   { path: "/sales/illustrations/new", element: modulePage("menu-new-illustration") },
@@ -60,7 +63,7 @@ const appRoutes: { path: string; element: React.ReactElement }[] = [
   { path: "/sales/applications/:id", element: detailPage("menu-application-detail") },
 
   // My Portfolio
-  { path: "/portfolio/policies", element: modulePage("menu-policies") },
+  { path: "/portfolio/policies", element: modulePage("menu-my-policies") },
   { path: "/portfolio/policies/:id", element: detailPage("menu-policy-detail") },
   { path: "/portfolio/renewals", element: modulePage("menu-renewals") },
   { path: "/portfolio/servicing", element: modulePage("menu-service-requests") },
@@ -99,7 +102,7 @@ const appRoutes: { path: string; element: React.ReactElement }[] = [
   { path: "/performance/contests/:id", element: detailPage("menu-contest-detail") },
 
   // My Agency
-  { path: "/agency", element: modulePage("menu-my-agency") },
+  { path: "/agency", element: modulePage("menu-agency-overview") },
   { path: "/agency/hierarchy", element: modulePage("menu-organization") },
   { path: "/agency/team", element: modulePage("menu-my-team") },
   { path: "/agency/team/:id", element: detailPage("menu-team-member-detail") },
