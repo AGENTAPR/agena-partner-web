@@ -2,7 +2,7 @@ import { LocaleOption, ModeVariant, ThemeVariant } from "@/constants";
 import { ContentType, MenuType } from "@/types/types";
 
 export const DEFAULTS = {
-  appRoot: "/dashboards/default",
+  appRoot: "/today",
   locale: "en" as LocaleOption,
   themeColor: "theme-aubergine" as ThemeVariant,
   themeMode: "system" as ModeVariant,

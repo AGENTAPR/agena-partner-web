@@ -28,3 +28,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# React Router framework mode
+.react-router/
+build/
