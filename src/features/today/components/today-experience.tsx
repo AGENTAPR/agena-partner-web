@@ -25,14 +25,13 @@ import {
   ListItemIcon,
   ListItemText,
   Skeleton,
-  Step,
-  StepLabel,
-  Stepper,
   Typography,
 } from "@mui/material";
 
 import NiCheckFull from "@/icons/nexture/ni-check-full";
 import NiClock from "@/icons/nexture/ni-clock";
+import NiCross from "@/icons/nexture/ni-cross";
+import NiPlay from "@/icons/nexture/ni-play";
 import NiCalendar from "@/icons/nexture/ni-calendar";
 import NiDocumentFull from "@/icons/nexture/ni-document-full";
 import NiFlag from "@/icons/nexture/ni-flag";
@@ -239,6 +238,13 @@ function useTodayData() {
     reload: load,
   };
 }
+
+const JOURNEY_STATE_ICONS: Record<string, { icon: typeof NiCalendar; className: string }> = {
+  DONE: { icon: NiCheckFull, className: "text-success" },
+  CURRENT: { icon: NiPlay, className: "text-primary" },
+  UPCOMING: { icon: NiClock, className: "text-text-secondary" },
+  BLOCKED: { icon: NiCross, className: "text-error" },
+};
 
 const INSIGHT_ICONS: Record<string, typeof NiCalendar> = {
   NiDocumentFull,
@@ -571,13 +577,29 @@ export function TodayExperience() {
                     <Typography variant="h6" className="mb-3">
                       {t("today-journey-title")}
                     </Typography>
-                    <Stepper orientation="vertical" nonLinear>
-                      {vm.journey.map((m) => (
-                        <Step key={m.id} active={m.state === "CURRENT"} completed={m.state === "DONE"}>
-                          <StepLabel error={m.state === "BLOCKED"}>{t(m.labelKey)}</StepLabel>
-                        </Step>
-                      ))}
-                    </Stepper>
+                    <Box className="flex flex-col">
+                      {vm.journey.map((m, idx) => {
+                        const js = JOURNEY_STATE_ICONS[m.state] ?? JOURNEY_STATE_ICONS.UPCOMING;
+                        const JIcon = js.icon;
+                        return (
+                          <Box
+                            key={m.id}
+                            className="border-grey-300/60 flex items-center gap-3 border-b py-2.5 last:border-b-0"
+                          >
+                            <JIcon className={`flex-none ${js.className}`} size="medium" />
+                            <Typography variant="body2" className="text-text-secondary w-4 text-center">
+                              {idx + 1}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              className={`min-w-0 flex-1 break-words ${m.state === "CURRENT" ? "font-bold" : ""}`}
+                            >
+                              {t(m.labelKey)}
+                            </Typography>
+                          </Box>
+                        );
+                      })}
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
