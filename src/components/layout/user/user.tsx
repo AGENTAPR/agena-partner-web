@@ -5,20 +5,7 @@ import { SyntheticEvent, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Avatar,
-  AvatarGroup,
-  Box,
-  Card,
-  CardContent,
-  Divider,
-  Fade,
-  ListItemIcon,
-  Typography,
-} from "@mui/material";
+import { Avatar, Box, Card, CardContent, Divider, Fade, ListItemIcon, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import ClickAwayListener from "@mui/material/ClickAwayListener";
 import MenuItem from "@mui/material/MenuItem";
@@ -26,13 +13,11 @@ import MenuList from "@mui/material/MenuList";
 import Popper from "@mui/material/Popper";
 
 import NiBuilding from "@/icons/nexture/ni-building";
-import NiChevronRightSmall from "@/icons/nexture/ni-chevron-right-small";
 import NiDocumentFull from "@/icons/nexture/ni-document-full";
 import NiFolder from "@/icons/nexture/ni-folder";
 import NiQuestionHexagon from "@/icons/nexture/ni-question-hexagon";
 import NiSettings from "@/icons/nexture/ni-settings";
 import NiUser from "@/icons/nexture/ni-user";
-import NiUsers from "@/icons/nexture/ni-users";
 import { cn } from "@/lib/utils";
 
 export default function User() {
@@ -66,7 +51,7 @@ export default function User() {
           )}
           onClick={handleToggle}
         >
-          <Box>Laura Ellis</Box>
+          <Box>{t("user-signed-in")}</Box>
           <Avatar
             alt="avatar"
             src="/images/avatars/avatar-3.jpg"
@@ -117,105 +102,20 @@ export default function User() {
                       <Box className="mb-4 flex flex-col items-center">
                         <Avatar alt="avatar" src="/images/avatars/avatar-3.jpg" className="large mb-2" />
                         <Typography variant="subtitle1" component="p">
-                          Laura Ellis
+                          {t("user-signed-in")}
                         </Typography>
                         <Typography variant="body2" component="p" className="text-text-secondary -mt-2">
-                          laura.ellis@averuna.dev
+                          {t("user-signed-in-description")}
                         </Typography>
                       </Box>
 
-                      <Box>
-                        <Accordion>
-                          <AccordionSummary className="group">
-                            <Button
-                              component="div"
-                              variant="pastel"
-                              size="large"
-                              color="text-primary"
-                              className="full-width-button hover:text-primary group-aria-expanded:text-primary group-aria-expanded:rounded-b-none hover:bg-gray-500/10"
-                              startIcon={<NiUsers size={20} />}
-                              endIcon={<NiChevronRightSmall size={20} className="accordion-rotate" />}
-                            >
-                              <Box className="flex w-full flex-row items-center justify-between">
-                                <Typography variant="button" component="span">
-                                  {t("user-accounts")}
-                                </Typography>
-                                <AvatarGroup max={3} className="tiny transition-opacity group-aria-expanded:opacity-0">
-                                  <Avatar className="tiny" alt="Laura Ellis" src="/images/avatars/avatar-3.jpg" />
-                                  <Avatar className="tiny" alt="Travis Howard" src="/images/avatars/avatar-2.jpg" />
-                                  <Avatar className="tiny" alt="Cindy Baker" src="/images/avatars/avatar-7.jpg" />
-                                  <Avatar className="tiny" alt="Agnes Walker" src="/images/avatars/avatar-4.jpg" />
-                                </AvatarGroup>
-                              </Box>
-                            </Button>
-                          </AccordionSummary>
-                          <AccordionDetails className="bg-grey-500/10 rounded-b-lg px-4 pt-2 pb-4">
-                            <MenuList className="mb-4 p-0">
-                              <MenuItem onClick={handleClose}>
-                                <ListItemIcon className="me-2">
-                                  <Avatar className="tiny" alt="Laura Ellis" src="/images/avatars/avatar-3.jpg" />
-                                </ListItemIcon>
-                                <Box>
-                                  <Typography variant="body1" component="div">
-                                    Laura Ellis
-                                  </Typography>
-                                  <Typography variant="body2" component="div" className="text-text-secondary -mt-1">
-                                    laura@averuna.dev
-                                  </Typography>
-                                </Box>
-                              </MenuItem>
-                              <MenuItem onClick={handleClose}>
-                                <ListItemIcon className="me-2">
-                                  <Avatar className="tiny" alt="Travis Howard" src="/images/avatars/avatar-2.jpg" />
-                                </ListItemIcon>
-                                <Box>
-                                  <Typography variant="body1" component="div">
-                                    Travis Howard
-                                  </Typography>
-                                  <Typography variant="body2" component="div" className="text-text-secondary -mt-1">
-                                    travis@averuna.dev
-                                  </Typography>
-                                </Box>
-                              </MenuItem>
-                              <MenuItem onClick={handleClose}>
-                                <ListItemIcon className="me-2">
-                                  <Avatar className="tiny" alt="Cindy Baker" src="/images/avatars/avatar-7.jpg" />
-                                </ListItemIcon>
-                                <Box>
-                                  <Typography variant="body1" component="div">
-                                    Cindy Baker
-                                  </Typography>
-                                  <Typography variant="body2" component="div" className="text-text-secondary -mt-1">
-                                    cindy@averuna.dev
-                                  </Typography>
-                                </Box>
-                              </MenuItem>
-                              <MenuItem onClick={handleClose}>
-                                <ListItemIcon className="me-2">
-                                  <Avatar className="tiny" alt="Agnes Walker" src="/images/avatars/avatar-4.jpg" />
-                                </ListItemIcon>
-                                <Box>
-                                  <Typography variant="body1" component="div">
-                                    Agnes Walker
-                                  </Typography>
-                                  <Typography variant="body2" component="div" className="text-text-secondary -mt-1">
-                                    agnes@averuna.dev
-                                  </Typography>
-                                </Box>
-                              </MenuItem>
-                            </MenuList>
-                            <Button variant="outlined" size="tiny" color="grey" className="w-full">
-                              {t("user-add-account")}
-                            </Button>
-                          </AccordionDetails>
-                        </Accordion>
-                      </Box>
+                      <Box></Box>
                       <Divider className="large" />
                       <MenuList className="p-0">
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/pages/user/overview");
+                            navigate("/today");
                           }}
                         >
                           <ListItemIcon>
@@ -226,7 +126,7 @@ export default function User() {
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/settings");
+                            navigate("/me/preferences");
                           }}
                         >
                           <ListItemIcon>
@@ -237,7 +137,7 @@ export default function User() {
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/pages/support/issues");
+                            navigate("/support/tickets");
                           }}
                         >
                           <ListItemIcon>
@@ -248,7 +148,7 @@ export default function User() {
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/pages/user/projects");
+                            navigate("/portfolio/policies");
                           }}
                         >
                           <ListItemIcon>
@@ -266,7 +166,7 @@ export default function User() {
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/docs");
+                            navigate("/support");
                           }}
                         >
                           <ListItemIcon>
@@ -277,7 +177,7 @@ export default function User() {
                         <MenuItem
                           onClick={(event) => {
                             handleClose(event);
-                            navigate("/pages/miscellaneous/knowledge-base");
+                            navigate("/resources/faq");
                           }}
                         >
                           <ListItemIcon>

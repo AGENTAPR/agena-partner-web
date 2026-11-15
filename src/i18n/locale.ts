@@ -1,8 +1,8 @@
-import Cookies from "js-cookie";
 import type { i18n as I18nInstance } from "i18next";
+import Cookies from "js-cookie";
 
 import { DEFAULTS } from "@/config";
-import { COOKIE_KEYS, LOCALES, LocaleOption } from "@/constants";
+import { COOKIE_KEYS, LocaleOption, LOCALES } from "@/constants";
 import i18n from "@/i18n/i18n";
 
 function isLocale(value: string | undefined | null): value is LocaleOption {

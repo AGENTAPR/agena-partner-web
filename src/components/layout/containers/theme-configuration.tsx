@@ -8,7 +8,6 @@ import { DEFAULTS } from "@/config";
 import { ModeVariant, THEME_OPTIONS } from "@/constants";
 import { RadiobuttonSmallChecked, RadiobuttonSmallEmptyOutlined } from "@/icons/form/mui-radiobutton";
 import NiArrowCircleLeft from "@/icons/nexture/ni-arrow-circle-left";
-import NiBasket from "@/icons/nexture/ni-basket";
 import NiChevronLeftRightReverseSmall from "@/icons/nexture/ni-chevron-left-right-reverse-small";
 import NiChevronLeftRightSmall from "@/icons/nexture/ni-chevron-left-right-small";
 import NiKnobs from "@/icons/nexture/ni-knobs";
@@ -71,17 +70,6 @@ export default function ThemeConfiguration() {
             color="grey"
             variant="text"
             startIcon={<NiKnobs size={"large"} />}
-          ></Button>
-        </Tooltip>
-        <Tooltip title="Purchase" placement="left" arrow>
-          <Button
-            className="icon-only text-secondary"
-            size="large"
-            color="grey"
-            variant="text"
-            startIcon={<NiBasket size={"large"} />}
-            href="https://1.envato.market/k4z0"
-            target="_blank"
           ></Button>
         </Tooltip>
       </Box>

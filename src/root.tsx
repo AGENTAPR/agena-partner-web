@@ -1,16 +1,16 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData, type LoaderFunctionArgs } from "react-router";
+import { Links, type LoaderFunctionArgs, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from "react-router";
 
 import { DEFAULTS } from "@/config";
 import {
   LOCAL_STORAGE_KEYS as LS_KEYS,
-  THEME_MODE_OPTIONS,
-  THEME_OPTIONS,
   type LocaleOption,
   type ModeVariant,
+  THEME_MODE_OPTIONS,
+  THEME_OPTIONS,
   type ThemeVariant,
 } from "@/constants";
-import { ContentType } from "@/types/types";
 import { getRequestLocale } from "@/i18n/locale";
+import { ContentType } from "@/types/types";
 
 export interface RootLoaderData {
   locale: LocaleOption;
@@ -49,9 +49,7 @@ export function loader({ request }: LoaderFunctionArgs) {
   const effectiveMode = effectiveRaw === "dark" ? "dark" : "light";
 
   const contentRaw = readCookie(cookieHeader, LS_KEYS.contentType);
-  const content = (
-    Object.values(ContentType) as string[]
-  ).includes(contentRaw ?? "")
+  const content = (Object.values(ContentType) as string[]).includes(contentRaw ?? "")
     ? (contentRaw as ContentType)
     : DEFAULTS.contentType;
 
@@ -59,18 +57,13 @@ export function loader({ request }: LoaderFunctionArgs) {
 }
 
 export function meta() {
-  return [
-    { title: "Averuna Partner" },
-    { name: "description", content: "Averuna Partner administration dashboard" },
-  ];
+  return [{ title: "Averuna Partner" }, { name: "description", content: "Averuna Partner administration dashboard" }];
 }
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
 
-  const htmlClass = [data.theme, data.effectiveMode === "dark" ? "dark" : ""]
-    .filter(Boolean)
-    .join(" ");
+  const htmlClass = [data.theme, data.effectiveMode === "dark" ? "dark" : ""].filter(Boolean).join(" ");
 
   return (
     <html lang={data.locale} dir="ltr" className={htmlClass || undefined} suppressHydrationWarning>

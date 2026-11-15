@@ -4,13 +4,13 @@ import { useRouteLoaderData } from "react-router";
 
 import { Box, StyledEngineProvider } from "@mui/material";
 
+import AppRoutes from "@/app-routes";
 import BackgroundWrapper from "@/components/layout/containers/background-wrapper";
 import SnackbarWrapper from "@/components/layout/containers/snackbar-wrapper";
 import LayoutContextProvider from "@/components/layout/layout-context";
-import Loading from "@/pages/loading";
-import AppRoutes from "@/app-routes";
 import { DEFAULTS } from "@/config";
 import { createI18n } from "@/i18n/i18n";
+import Loading from "@/pages/loading";
 import type { RootLoaderData } from "@/root";
 import ThemeProvider from "@/theme/theme-provider";
 

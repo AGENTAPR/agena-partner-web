@@ -57,7 +57,7 @@ export default function Header() {
 
         <Box className="flex h-full flex-1 flex-row items-center gap-4 md:gap-6">
           {/* Logo */}
-          <Link to="/dashboards/default">
+          <Link to="/today">
             <Logo classNameFull="ms-2 hidden md:block" classNameMobile="ms-2 md:hidden" />
           </Link>
 

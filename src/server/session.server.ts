@@ -1,14 +1,17 @@
-import { createCookieSessionStorage, redirect, type SessionStorage } from "react-router";
-import type { AppLoadContext } from "react-router";
-
 import { getEnv } from "./env.server";
+import type { AppLoadContext } from "react-router";
+import { createCookieSessionStorage, redirect, type SessionStorage } from "react-router";
 
 export const SESSION_COOKIE_NAME = "__averuna_session";
 
 const MAX_AGE_SECONDS = 60 * 60 * 8; // 8 hours
 
+function nodeEnv(): string | undefined {
+  return (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env?.NODE_ENV;
+}
+
 function isProduction(context: AppLoadContext): boolean {
-  return getEnv(context)?.SESSION_SECRET !== undefined || process.env.NODE_ENV === "production";
+  return getEnv(context)?.SESSION_SECRET !== undefined || nodeEnv() === "production";
 }
 
 function getSessionSecret(context: AppLoadContext): string {
@@ -16,7 +19,7 @@ function getSessionSecret(context: AppLoadContext): string {
   const secret = env?.SESSION_SECRET;
   if (!secret) {
     // Dev fallback — never used in production deployments
-    if (process.env.NODE_ENV === "production") {
+    if (nodeEnv() === "production") {
       throw new Error("SESSION_SECRET binding is required in production");
     }
     return "dev-only-insecure-session-secret";
