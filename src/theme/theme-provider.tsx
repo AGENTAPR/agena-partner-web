@@ -1,6 +1,6 @@
 import MuiLayerOverride from "./mui-layer-override";
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 
 import { createTheme, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
 
@@ -272,9 +272,7 @@ export default function ThemeProvider({
     () => readClientPref(LS_KEYS.themeColor, initialPrefs?.theme ?? DEFAULTS.themeColor) as ThemeVariant,
   );
   const theme =
-    storedTheme && (Object.values(THEME_OPTIONS) as string[]).includes(storedTheme)
-      ? storedTheme
-      : DEFAULTS.themeColor;
+    storedTheme && (Object.values(THEME_OPTIONS) as string[]).includes(storedTheme) ? storedTheme : DEFAULTS.themeColor;
   const [mode, setMode] = useState<ModeVariant>(
     () => readClientPref(LS_KEYS.themeMode, initialPrefs?.mode ?? DEFAULTS.themeMode) as ModeVariant,
   );

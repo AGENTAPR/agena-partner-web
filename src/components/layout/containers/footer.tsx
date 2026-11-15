@@ -24,20 +24,9 @@ export default function Footer() {
         variant="text"
         className="hover:text-primary bg-transparent! font-normal"
         component={Link}
-        to="/docs"
+        to="/support"
       >
         {t("footer-docs")}
-      </Button>
-      <Button
-        size="tiny"
-        color="text-secondary"
-        variant="text"
-        className="hover:text-primary bg-transparent! font-normal"
-        component={Link}
-        to="https://1.envato.market/k4z0"
-        target="_blank"
-      >
-        {t("footer-purchase")}
       </Button>
     </Box>
   );

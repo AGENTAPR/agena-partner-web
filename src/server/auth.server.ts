@@ -1,8 +1,7 @@
-import { redirect } from "react-router";
-import type { AppLoadContext } from "react-router";
-
 import { agentBffFetch } from "./agent-bff.server";
 import { commitSession, destroySession, getSession, type SessionData } from "./session.server";
+import type { AppLoadContext } from "react-router";
+import { redirect } from "react-router";
 
 const SAFE_REDIRECT_PATHS = [/^\/app/, /^\/auth/];
 
@@ -63,10 +62,7 @@ export function verifyCsrf(request: Request, sessionData: SessionData): boolean 
   const token = sessionData.csrfToken;
   if (!token) return false;
   const header = request.headers.get("X-CSRF-Token");
-  const formToken =
-    request.headers.get("Content-Type")?.includes("form")
-      ? null
-      : null;
+  const formToken = request.headers.get("Content-Type")?.includes("form") ? null : null;
   const provided = header ?? formToken;
   if (!provided) return false;
   if (provided.length !== token.length) return false;
