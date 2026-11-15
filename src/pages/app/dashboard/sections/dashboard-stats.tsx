@@ -14,6 +14,7 @@ import NiSun from "@/icons/nexture/ni-sun";
 import NiTriangleUp from "@/icons/nexture/ni-triangle-up";
 import NiUser from "@/icons/nexture/ni-user";
 import { ModeVariant } from "@/constants";
+import { cn } from "@/lib/utils";
 import { useThemeContext } from "@/theme/theme-provider";
 import type { ReactNode } from "react";
 
@@ -74,7 +75,7 @@ const STATS: StatItem[] = [
   },
 ];
 
-function StatCard({ stat }: { stat: StatItem }) {
+function StatCard({ stat, className }: { stat: StatItem; className?: string }) {
   const { t } = useTranslation();
   const body = (
     <>
@@ -101,7 +102,7 @@ function StatCard({ stat }: { stat: StatItem }) {
       </CardContent>
     </>
   );
-  const cls = "flex h-full flex-row items-center p-1 transition-transform hover:scale-[1.02]";
+  const cls = cn("flex h-full flex-row items-center p-1 transition-transform hover:scale-[1.02]", className);
   return stat.to ? (
     <Card component={Link} to={stat.to} className={cls}>
       {body}
@@ -117,55 +118,49 @@ const MODE_OPTIONS: { value: ModeVariant; icon: ReactNode; labelKey: string }[] 
   { value: "dark", icon: <NiMoon size="medium" />, labelKey: "mode-dark" },
 ];
 
-function ConfigurationCard() {
+function ConfigurationPanel() {
   const { t } = useTranslation();
   const { mode, setMode } = useThemeContext();
   return (
-    <Card className="h-full">
-      <CardContent className="flex h-full flex-col gap-4 p-6">
-        <Box className="flex flex-row items-center gap-2">
-          <NiKnobs className="text-primary" size="large" />
-          <Typography variant="h5" component="h6">
-            {t("dashboard-configuration")}
-          </Typography>
-        </Box>
-        <Typography variant="body1" color="text.secondary">
-          {t("dashboard-configuration-desc")}
+    <Box className="from-primary-light/15 to-secondary-light/15 bg-gradient-to-br shadow-xs flex h-full w-full flex-none flex-col justify-center gap-3 rounded-3xl px-4 py-4 lg:rounded-l-none!">
+      <Box className="flex flex-row items-center gap-2">
+        <NiKnobs className="text-primary" size="medium" />
+        <Typography variant="subtitle2" component="h6" className="font-bold">
+          {t("dashboard-configuration")}
         </Typography>
-        <Box className="mt-auto flex flex-col gap-2">
-          {MODE_OPTIONS.map((opt) => (
-            <Button
-              key={opt.value}
-              size="medium"
-              variant={mode === opt.value ? "contained" : "outlined"}
-              color={mode === opt.value ? "primary" : "grey"}
-              startIcon={opt.icon}
-              onClick={() => setMode(opt.value)}
-              className="justify-start"
-            >
-              {t(opt.labelKey)}
-            </Button>
-          ))}
-        </Box>
-      </CardContent>
-    </Card>
+      </Box>
+      <Box className="flex flex-col gap-1">
+        {MODE_OPTIONS.map((opt) => (
+          <Button
+            key={opt.value}
+            size="small"
+            variant={mode === opt.value ? "contained" : "text"}
+            color={mode === opt.value ? "primary" : "grey"}
+            startIcon={opt.icon}
+            onClick={() => setMode(opt.value)}
+            className="justify-start"
+          >
+            {t(opt.labelKey)}
+          </Button>
+        ))}
+      </Box>
+    </Box>
   );
 }
 
 export default function DashboardStats() {
   return (
     <Grid container spacing={2.5}>
-      <Grid size={{ xs: 12, lg: 10 }}>
-        <Grid container spacing={2.5}>
-          {STATS.map((stat) => (
-            <Grid key={stat.labelKey} size={{ xs: 12, sm: 6, lg: 2 }}>
-              <StatCard stat={stat} />
-            </Grid>
-          ))}
-        </Grid>
-      </Grid>
-      <Grid size={{ xs: 12, lg: 2 }}>
-        <ConfigurationCard />
+      {STATS.map((stat, index) => {
+        const isLast = index === STATS.length - 1;
+        return (
+          <Grid key={stat.labelKey} size={{ xs: 12, sm: 6, lg: 2 }}>
+            <StatCard stat={stat} className={isLast ? "lg:rounded-r-none!" : undefined} />
+          </Grid>
+        );
+      })}
+      <Grid size={{ xs: 12, sm: 6, lg: 2 }} sx={{ lg: { ml: "-20px" } }}>
+        <ConfigurationPanel />
       </Grid>
     </Grid>
   );
