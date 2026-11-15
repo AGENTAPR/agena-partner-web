@@ -34,7 +34,7 @@ const STATS: StatItem[] = [
     value: "248",
     change: "+8,7%",
     to: "/customers",
-    icon: <NiUser size="large" />,
+    icon: <NiUser size="medium" />,
     tileClass: "bg-primary-light/10",
     iconClass: "text-primary",
   },
@@ -43,7 +43,7 @@ const STATS: StatItem[] = [
     value: "12",
     change: "+33%",
     to: "/sales/proposals",
-    icon: <NiDocumentFull size="large" />,
+    icon: <NiDocumentFull size="medium" />,
     tileClass: "bg-secondary-light/10",
     iconClass: "text-secondary",
   },
@@ -52,7 +52,7 @@ const STATS: StatItem[] = [
     value: "186",
     change: "+5,1%",
     to: "/portfolio/policies",
-    icon: <NiShieldCheck size="large" />,
+    icon: <NiShieldCheck size="medium" />,
     tileClass: "bg-accent-1-light/10",
     iconClass: "text-accent-1",
   },
@@ -60,7 +60,7 @@ const STATS: StatItem[] = [
     labelKey: "dashboard-stat-running-claims",
     value: "4",
     to: "/portfolio/claims",
-    icon: <NiDocumentCheck size="large" />,
+    icon: <NiDocumentCheck size="medium" />,
     tileClass: "bg-accent-2-light/10",
     iconClass: "text-accent-2",
   },
@@ -69,7 +69,7 @@ const STATS: StatItem[] = [
     value: "Rp 24,8jt",
     change: "+18,4%",
     to: "/earnings",
-    icon: <NiMoney size="large" />,
+    icon: <NiMoney size="medium" />,
     tileClass: "bg-success-light/10",
     iconClass: "text-success",
   },
@@ -79,14 +79,14 @@ function StatCard({ stat, className }: { stat: StatItem; className?: string }) {
   const { t } = useTranslation();
   const body = (
     <>
-      <Box className={`flex h-28 w-16 flex-none items-center justify-center rounded-2xl ${stat.tileClass}`}>
+      <Box className={`flex h-20 w-14 flex-none items-center justify-center rounded-2xl ${stat.tileClass}`}>
         <Box className={stat.iconClass}>{stat.icon}</Box>
       </Box>
-      <CardContent className="flex min-h-28 min-w-0 flex-col justify-center gap-1">
+      <CardContent className="flex min-h-20 min-w-0 flex-col justify-center gap-0.5">
         <Typography variant="caption" className="text-text-secondary leading-4">
           {t(stat.labelKey)}
         </Typography>
-        <Typography variant="h6" className="text-leading-5">
+        <Typography variant="subtitle1" className="text-leading-5 font-bold">
           {stat.value}
         </Typography>
         <Box className="flex flex-row items-center gap-1">
