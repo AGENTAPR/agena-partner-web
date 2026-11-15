@@ -546,5 +546,8 @@
   "today-view-notifications": "Lihat notifikasi",
   "today-section-empty": "Menunggu data backend",
   "user-signed-in": "Averuna Partner",
-  "user-signed-in-description": "Masuk di perangkat ini"
+  "user-signed-in-description": "Masuk di perangkat ini",
+  "menu-product-catalogue": "Katalog Produk",
+  "menu-my-policies": "Polis Saya",
+  "menu-agency-overview": "Ringkasan Agensi"
 }

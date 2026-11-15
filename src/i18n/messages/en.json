@@ -546,5 +546,8 @@
   "today-view-notifications": "View notifications",
   "today-section-empty": "Awaiting backend data",
   "user-signed-in": "Averuna Partner",
-  "user-signed-in-description": "Signed in on this device"
+  "user-signed-in-description": "Signed in on this device",
+  "menu-product-catalogue": "Product Catalogue",
+  "menu-my-policies": "My Policies",
+  "menu-agency-overview": "Agency Overview"
 }
